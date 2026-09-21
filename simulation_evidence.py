@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from enum import Enum
 import math
 from typing import Callable, Optional, Tuple
@@ -66,6 +67,46 @@ class VerifiedBrokerSnapshot:
     con_id: Optional[int]
     open_order_count: int
     received_monotonic: float
+
+
+@dataclass(frozen=True)
+class VerifiedAccountSnapshot:
+    account_id: str
+    selected_account: str
+    complete: bool
+    currency: str
+    available_funds: object
+    buying_power: object
+    excess_liquidity: object
+    total_cash_value: object
+    settled_cash: object
+    oldest_required_receipt_monotonic: float
+
+
+def conservative_usable_funds(snapshot, selected_account, now_monotonic):
+    if not isinstance(snapshot, VerifiedAccountSnapshot) or snapshot.complete is not True:
+        raise EvidenceError("Account summary incomplete")
+    if (not selected_account or snapshot.account_id != selected_account
+            or snapshot.selected_account != selected_account or snapshot.currency != "USD"):
+        raise EvidenceError("Account identity or currency mismatch")
+    age = now_monotonic - snapshot.oldest_required_receipt_monotonic
+    if not math.isfinite(age) or age < 0 or age > MAX_AGE_SECONDS:
+        raise EvidenceError("Account summary stale")
+    values = []
+    for raw in (snapshot.available_funds, snapshot.buying_power,
+                snapshot.excess_liquidity, snapshot.total_cash_value,
+                snapshot.settled_cash):
+        try:
+            value = Decimal(str(raw))
+        except (InvalidOperation, TypeError, ValueError):
+            raise EvidenceError("Account summary value invalid")
+        if not value.is_finite() or value < 0:
+            raise EvidenceError("Account summary value invalid")
+        values.append(value)
+    usable = min(values[0], values[2], values[3], values[4])
+    if usable <= 0:
+        raise EvidenceError("No conservative usable funds")
+    return usable
 
 
 def positive_number(value):
