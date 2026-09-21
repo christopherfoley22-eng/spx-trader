@@ -5,8 +5,8 @@ Market and account evidence are supplied by a synthetic or read-only adapter.
 """
 
 from dataclasses import asdict, dataclass
-from datetime import datetime
-from decimal import Decimal
+from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 import hashlib
 import json
 import sqlite3
@@ -50,13 +50,19 @@ class DryRunExecutor:
     """
 
     def __init__(self, path, selected_account, session_has_expiration,
-                 max_exit_chunk=10):
+                 max_exit_chunk=10, initial_trading_day=None):
         if not isinstance(selected_account, str) or not selected_account.strip():
             raise DryRunError("Explicit runtime account required")
         if not callable(session_has_expiration):
             raise DryRunError("Expiration calendar required")
         if max_exit_chunk not in (5, 10):
             raise DryRunError("Exit chunk size must be 5 or 10")
+        if initial_trading_day is not None:
+            try:
+                if date.fromisoformat(initial_trading_day).isoformat() != initial_trading_day:
+                    raise ValueError
+            except (TypeError, ValueError):
+                raise DryRunError("Initial replay trading date invalid")
         self.selected_account = selected_account
         self.session_has_expiration = session_has_expiration
         self.max_exit_chunk = max_exit_chunk
@@ -97,7 +103,7 @@ class DryRunExecutor:
         row = self.db.execute("SELECT account_hash FROM controller WHERE singleton=1").fetchone()
         if row is None:
             self.db.execute("INSERT INTO controller VALUES (1, ?, 'FLAT', NULL, NULL, NULL, ?, 0, 0, NULL, NULL, NULL, 0, NULL)",
-                            (account_hash, datetime.now(NY).date().isoformat()))
+                            (account_hash, initial_trading_day or datetime.now(NY).date().isoformat()))
         elif row[0] != account_hash:
             raise DryRunError("Runtime account differs from persisted binding")
         self._check_state()
@@ -361,13 +367,24 @@ class DryRunExecutor:
 
     def entry_event(self, event_id, chunk_id, fill_qty=0, rejected=False,
                     fill_con_id=None,
+                    simulated_price=None,
                     account=None, spx=None, option=None, snapshot=None,
                     now_wall=None, now_monotonic=None):
         def action():
             row = self._check_state()
             old = self.db.execute("SELECT kind,detail FROM audit WHERE event_id=?", (event_id,)).fetchone()
+            if simulated_price is not None:
+                try:
+                    price = Decimal(str(simulated_price))
+                except (TypeError, ValueError, InvalidOperation):
+                    raise DryRunError("Simulated entry price malformed")
+                if not price.is_finite() or price <= 0:
+                    raise DryRunError("Simulated entry price invalid")
+                simulated_price_text = str(price)
+            else:
+                simulated_price_text = None
             detail = {"chunk": chunk_id, "fill": fill_qty, "rejected": rejected,
-                      "con_id": fill_con_id}
+                      "con_id": fill_con_id, "simulated_price": simulated_price_text}
             if old:
                 if old != ("ENTRY_EVENT", json.dumps(detail, sort_keys=True, separators=(",", ":"))):
                     raise DryRunError("Changed fill event replay")
@@ -397,6 +414,8 @@ class DryRunExecutor:
                 if (asdict(option.contract) != plan["contract"] or option.quote_con_id != plan["con_id"]
                         or option.bid != plan["bid"] or option.ask != plan["ask"]
                         or spx.price != plan["spx_price"]
+                        or (simulated_price_text is not None
+                            and price != Decimal(str(option.ask)))
                         or funds < Decimal(str(row[6] + fill_qty)) * Decimal(str(plan["ask"])) * 100):
                     raise EvidenceError("Entry evidence changed after authorization")
             self._event(event_id, "ENTRY_EVENT", detail)
@@ -468,6 +487,11 @@ class DryRunExecutor:
             self.db.execute("INSERT INTO market_watermark VALUES ('SPX',?) ON CONFLICT(key) DO UPDATE SET source_time=excluded.source_time",
                             (spx.source_time.isoformat(),))
             if row[0] == "EXITING":
+                self._event(event_id, "MARKET_OBSERVED", {"phase": "EXITING",
+                                                           "price": spx.price,
+                                                           "source_time": spx.source_time.isoformat(),
+                                                           "status": spx.status.value,
+                                                           "receipt": spx.received_monotonic})
                 return "EXITING"
             price = Decimal(str(spx.price))
             entry = Decimal(row[8])
@@ -527,11 +551,22 @@ class DryRunExecutor:
 
     def exit_event(self, event_id, chunk_id, fill_qty=0, rejected=False,
                    fill_con_id=None,
+                   simulated_price=None,
                    snapshot=None, now_monotonic=None):
         def action():
             row = self._check_state()
+            if simulated_price is not None:
+                try:
+                    price = Decimal(str(simulated_price))
+                except (TypeError, ValueError, InvalidOperation):
+                    raise DryRunError("Simulated exit price malformed")
+                if not price.is_finite() or price <= 0:
+                    raise DryRunError("Simulated exit price invalid")
+                simulated_price_text = str(price)
+            else:
+                simulated_price_text = None
             detail = {"chunk": chunk_id, "fill": fill_qty, "rejected": rejected,
-                      "con_id": fill_con_id}
+                      "con_id": fill_con_id, "simulated_price": simulated_price_text}
             old = self.db.execute("SELECT kind,detail FROM audit WHERE event_id=?", (event_id,)).fetchone()
             if old:
                 if old != ("EXIT_EVENT", json.dumps(detail, sort_keys=True, separators=(",", ":"))):
