@@ -44,12 +44,12 @@ e.simulate_entry_fill(
 assert e.state == EngineState.OPEN
 assert e.trades_today == 1
 
-# +4 arms near-winner protection.
-e.update_spx(7704.00)
+# +4.80 arms near-winner protection.
+e.update_spx(7704.80)
 assert e.position.strategy_state == StrategyState.NEAR_WINNER
 
-# Pullback above +1 remains alive.
-assert e.update_spx(7702.00) is None
+# Less than a one-point reversal remains alive.
+assert e.update_spx(7703.81) is None
 
 # +5 switches permanently into Let It Ride.
 e.update_spx(7705.00)

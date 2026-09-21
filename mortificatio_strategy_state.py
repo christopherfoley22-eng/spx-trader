@@ -9,6 +9,7 @@ Python 3.9 compatible.
 """
 
 import sqlite3
+import math
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -20,6 +21,8 @@ CALL = "CALL"
 PUT = "PUT"
 
 INITIAL_STOP_POINTS = 3.25
+NEAR_WINNER_ARM_POINTS = 4.80
+NEAR_WINNER_REVERSAL_POINTS = 1.00
 LET_IT_RIDE_ARM_POINTS = 5.00
 TRAIL_REVERSAL_POINTS = 3.00
 
@@ -162,6 +165,9 @@ class DurableStrategyState:
         if row is None:
             raise StrategyStateError("Strategy state missing")
 
+        if row[0] not in (0, 1) or row[4] not in (0, 1) or row[6] not in (0, 1):
+            raise StrategyStateError("Strategy flags corrupted")
+
         snapshot = StrategySnapshot(
             active=bool(row[0]),
             direction=row[1],
@@ -199,12 +205,14 @@ class DurableStrategyState:
 
         if (
             snapshot.entry_spx is None
+            or not math.isfinite(snapshot.entry_spx)
             or snapshot.entry_spx <= 0
         ):
             raise StrategyStateError("Active strategy missing entry SPX")
 
         if (
             snapshot.best_spx is None
+            or not math.isfinite(snapshot.best_spx)
             or snapshot.best_spx <= 0
         ):
             raise StrategyStateError("Active strategy missing best SPX")
@@ -230,6 +238,10 @@ class DurableStrategyState:
                 raise StrategyStateError(
                     "Let It Ride armed without persisted +5"
                 )
+        elif self._favorable_points(
+            snapshot.direction, snapshot.entry_spx, snapshot.best_spx
+        ) >= LET_IT_RIDE_ARM_POINTS:
+            raise StrategyStateError("Persisted +5 without Let It Ride state")
 
         if snapshot.exit_required and snapshot.exit_reason is None:
             raise StrategyStateError(
@@ -269,7 +281,7 @@ class DurableStrategyState:
         if not isinstance(con_id, int) or con_id <= 0:
             raise StrategyStateError("Invalid conId")
 
-        if entry_spx is None or entry_spx <= 0:
+        if entry_spx is None or not math.isfinite(entry_spx) or entry_spx <= 0:
             raise StrategyStateError("Invalid entry SPX")
 
         self.conn.execute("BEGIN IMMEDIATE")
@@ -320,7 +332,7 @@ class DurableStrategyState:
         return self.status()
 
     def process_spx(self, current_spx):
-        if current_spx is None or current_spx <= 0:
+        if current_spx is None or not math.isfinite(current_spx) or current_spx <= 0:
             raise StrategyStateError("Invalid SPX price")
 
         self.conn.execute("BEGIN IMMEDIATE")
@@ -388,11 +400,16 @@ class DurableStrategyState:
             exit_required = False
             exit_reason = None
 
-            # Before +5, only the defined initial losing stop exists.
-            # Winner protection between 0 and +5 remains intentionally
-            # unresolved and is NOT invented here.
+            # Before +5, protect a peak of at least +4.80 with a
+            # one-point reversal. +5 takes precedence permanently.
             if not armed:
-                if favorable <= -INITIAL_STOP_POINTS:
+                if (
+                    best_favorable >= NEAR_WINNER_ARM_POINTS
+                    and reversal >= NEAR_WINNER_REVERSAL_POINTS
+                ):
+                    exit_required = True
+                    exit_reason = "NEAR_WINNER_REVERSAL"
+                elif favorable <= -INITIAL_STOP_POINTS:
                     exit_required = True
                     exit_reason = "INITIAL_STOP"
 

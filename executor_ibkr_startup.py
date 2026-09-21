@@ -251,15 +251,15 @@ def main():
             return
 
         # ----------------------------------------------------
-        # BOTH SIDES CURRENTLY PROVE SAFE BROKER STATE
+        # Broker snapshot alone cannot prove local persisted state.
         # ----------------------------------------------------
 
-        print("EXECUTOR LOCAL STATE: FLAT")
+        print("BROKER SNAPSHOT: FLAT")
         print()
-        print("RECOVERY DECISION: READY")
+        print("RECOVERY DECISION: LOCKED")
         print(
-            "REASON: BROKER CONFIRMS "
-            "NO POSITION / NO API-VISIBLE OPEN ORDER"
+            "REASON: PERSISTED EXECUTOR STATE "
+            "HAS NOT BEEN RECONCILED"
         )
 
     finally:

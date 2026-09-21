@@ -151,7 +151,7 @@ assert opened.quantity == 25
 assert broker.position_qty == 25
 
 assert engine.process_spx(7704.8)["action"] == "HOLD"
-assert engine.process_spx(7700.5)["action"] == "HOLD"
+assert engine.process_spx(7703.81)["action"] == "HOLD"
 
 assert engine.process_spx(7712.0)["action"] == "HOLD"
 
@@ -670,7 +670,7 @@ print("DUPLICATE EXIT WHILE ORDER WORKING BLOCKED PASS")
 
 
 # ============================================================
-# 15. +4.8 hole remains explicit
+# 15. +4.8 near-winner protection
 # ============================================================
 
 directory, lifecycle_db, strategy_db = db_paths()
@@ -692,19 +692,19 @@ plan = engine.authorize_entry(
 engine.simulate_entry(plan)
 
 assert engine.process_spx(7704.8)["action"] == "HOLD"
-assert engine.process_spx(7700.5)["action"] == "HOLD"
+assert engine.process_spx(7703.81)["action"] == "HOLD"
 
-# Finish test through defined initial stop.
-decision = engine.process_spx(7696.75)
+# One-point reversal from the +4.8 peak exits all.
+decision = engine.process_spx(7703.8)
 
 assert decision["action"] == "EXITING"
-assert decision["reason"] == "INITIAL_STOP"
+assert decision["reason"] == "NEAR_WINNER_REVERSAL"
 
 engine.simulate_exit_to_flat()
 
 cleanup(engine, directory)
 
-print("PRE-+5 STRATEGY HOLE REMAINS EXPLICIT PASS")
+print("PRE-+5 NEAR-WINNER PROTECTION PASS")
 
 
 # ============================================================

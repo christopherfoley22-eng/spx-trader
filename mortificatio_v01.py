@@ -27,6 +27,7 @@ Lifecycle:
 """
 
 from dataclasses import dataclass
+import math
 from typing import Iterable, List, Optional
 
 from mortificatio_entry import (
@@ -155,6 +156,8 @@ class SimulatedBroker:
 
 
 def max_affordable_contracts(usable_funds, ask):
+    if not math.isfinite(usable_funds) or not math.isfinite(ask):
+        return 0
     if usable_funds <= 0 or ask <= 0:
         return 0
 
@@ -192,12 +195,12 @@ def build_entry_plan(
             "Direction must be CALL or PUT"
         )
 
-    if spx_price <= 0:
+    if not math.isfinite(spx_price) or spx_price <= 0:
         raise MortificatioV01Error(
             "SPX price must be positive"
         )
 
-    if usable_funds <= 0:
+    if not math.isfinite(usable_funds) or usable_funds <= 0:
         raise MortificatioV01Error(
             "Usable funds must be positive"
         )
@@ -211,7 +214,12 @@ def build_entry_plan(
         ):
             continue
 
-        if candidate.strike <= 0 or candidate.ask <= 0:
+        if (
+            not math.isfinite(candidate.strike)
+            or not math.isfinite(candidate.ask)
+            or candidate.strike <= 0
+            or candidate.ask <= 0
+        ):
             continue
 
         quantity = max_affordable_contracts(

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Optional
+import math
 
 
 # ============================================================
@@ -13,8 +14,8 @@ DAILY_TRADE_LIMIT = 2
 
 INITIAL_STOP = 3.25
 
-NEAR_WINNER_ARM = 4.00
-NEAR_WINNER_FLOOR = 1.00
+NEAR_WINNER_ARM = 4.80
+NEAR_WINNER_REVERSAL = 1.00
 
 LET_IT_RIDE_ARM = 5.00
 LET_IT_RIDE_TRAIL = 3.00
@@ -80,6 +81,9 @@ def max_affordable_contracts(
     ask: float,
 ) -> int:
 
+    if not math.isfinite(usable_funds) or not math.isfinite(ask):
+        return 0
+
     if usable_funds <= 0:
         return 0
 
@@ -99,8 +103,12 @@ def select_contract(
     candidates,
 ) -> Optional[Selection]:
 
+    if not math.isfinite(spx) or spx <= 0:
+        return None
+
     ordered = sorted(
-        candidates,
+        (c for c in candidates if isinstance(c.con_id, int) and c.con_id > 0
+         and math.isfinite(c.strike) and c.strike > 0),
         key=lambda c: (
             abs(c.strike - spx),
             c.strike,
@@ -133,6 +141,7 @@ class Executor:
 
         self.state = EngineState.FLAT
         self.position: Optional[Position] = None
+        self._pending_entry = None
 
         self.trades_today = 0
 
@@ -168,6 +177,9 @@ class Executor:
         broker_position_qty: int,
         broker_open_orders: int,
     ):
+
+        if not isinstance(direction, Direction):
+            return self._log("ENTRY_BLOCKED", reason="INVALID_DIRECTION")
 
         # Fail closed if broker truth is unavailable.
         if not reconciliation_complete:
@@ -223,6 +235,10 @@ class Executor:
 
         # Reserve the engine before any hypothetical execution.
         self.state = EngineState.ENTERING
+        self._pending_entry = (
+            direction, selection.candidate.con_id,
+            selection.candidate.strike, selection.quantity,
+        )
 
         return self._log(
             "DRY_RUN_ENTRY_REQUEST",
@@ -257,6 +273,12 @@ class Executor:
                 "LOCAL POSITION ALREADY EXISTS"
             )
 
+        if self._pending_entry != (direction, con_id, strike, quantity):
+            raise RuntimeError("FILL DIFFERS FROM ENTRY REQUEST")
+
+        if not isinstance(direction, Direction) or not math.isfinite(entry_spx) or entry_spx <= 0:
+            raise RuntimeError("INVALID ENTRY DATA")
+
         if quantity < 1 or quantity > MAX_CONTRACTS:
             raise RuntimeError(
                 "INVALID ENTRY QUANTITY"
@@ -271,6 +293,7 @@ class Executor:
         )
 
         self.state = EngineState.OPEN
+        self._pending_entry = None
         self.trades_today += 1
 
         return self._log(
@@ -297,6 +320,9 @@ class Executor:
             )
 
         p = self.position
+
+        if not math.isfinite(spx) or spx <= 0:
+            raise RuntimeError("INVALID SPX PRICE")
 
         move = (
             (spx - p.entry_spx)
@@ -350,9 +376,9 @@ class Executor:
 
         elif p.strategy_state == StrategyState.NEAR_WINNER:
 
-            if move <= NEAR_WINNER_FLOOR:
+            if p.max_favorable - move >= NEAR_WINNER_REVERSAL:
                 return self._begin_exit(
-                    reason="NEAR_WINNER_FLOOR",
+                    reason="NEAR_WINNER_REVERSAL",
                     spx=spx,
                     move=move,
                 )

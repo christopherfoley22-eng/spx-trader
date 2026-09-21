@@ -606,6 +606,10 @@ print("----------------------------------------")
 
 checks = [
     (
+        "PERSISTED_STATE_RECONCILIATION",
+        False,
+    ),
+    (
         "ACCOUNT_SELECTION",
         account_ok,
     ),

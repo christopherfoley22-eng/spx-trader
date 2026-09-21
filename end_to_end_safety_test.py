@@ -8,8 +8,8 @@ MAX_CHUNK = 5
 DAILY_LIMIT = 2
 
 INITIAL_STOP = 3.25
-NEAR_WINNER_ARM = 4.00
-NEAR_WINNER_FLOOR = 1.00
+NEAR_WINNER_ARM = 4.80
+NEAR_WINNER_REVERSAL = 1.00
 LET_IT_RIDE_ARM = 5.00
 LET_IT_RIDE_TRAIL = 3.00
 
@@ -276,9 +276,9 @@ class Executor:
         # NEAR-WINNER FLOOR
         if (
             self.strategy == Strategy.NEAR_WINNER
-            and move <= NEAR_WINNER_FLOOR
+            and self.max_favorable - move >= NEAR_WINNER_REVERSAL
         ):
-            self.begin_exit("NEAR_WINNER_FLOOR")
+            self.begin_exit("NEAR_WINNER_REVERSAL")
             return "EXIT"
 
         # LET IT RIDE
@@ -424,11 +424,11 @@ print("4. +4.8 ARMS NEAR-WINNER PROTECTION: PASS")
 
 
 # Pull back, but still above +1.
-result = e.update_spx(6702.0)
+result = e.update_spx(6703.81)
 
 expect(result == "HOLD", result)
 
-print("5. +2.0 AFTER +4.8 CONTINUES HOLDING: PASS")
+print("5. LESS THAN ONE-POINT REVERSAL HOLDS: PASS")
 
 
 # Recover to +5: Let It Ride.

@@ -200,7 +200,7 @@ print("GAP-THROUGH OBSERVED PRICE PASS")
 
 
 # ============================================================
-# 9. +4.8 reversal remains intentionally unresolved
+# 9. +4.8 peak has a durable one-point reversal exit
 # ============================================================
 
 path = new_db()
@@ -211,13 +211,15 @@ d = s.process_spx(7704.8)
 assert d.action == "HOLD"
 assert not s.status().let_it_ride_armed
 
-d = s.process_spx(7700.5)
+d = s.process_spx(7703.81)
 assert d.action == "HOLD"
-assert d.reason is None
+d = s.process_spx(7703.8)
+assert d.action == "EXIT"
+assert d.reason == "NEAR_WINNER_REVERSAL"
 
 s.close()
 os.remove(path)
-print("PRE-+5 WINNER PROTECTION REMAINS UNRESOLVED PASS")
+print("PRE-+5 WINNER PROTECTION PASS")
 
 
 # ============================================================
