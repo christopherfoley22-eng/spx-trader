@@ -29,6 +29,7 @@ Lifecycle:
 from dataclasses import dataclass
 import math
 from typing import Iterable, List, Optional
+from safe_sizing import max_affordable_contracts as safe_max_affordable_contracts
 
 from mortificatio_entry import (
     EntryLifecycle,
@@ -156,18 +157,7 @@ class SimulatedBroker:
 
 
 def max_affordable_contracts(usable_funds, ask):
-    if not math.isfinite(usable_funds) or not math.isfinite(ask):
-        return 0
-    if usable_funds <= 0 or ask <= 0:
-        return 0
-
-    cost = ask * OPTION_MULTIPLIER
-    quantity = int(usable_funds // cost)
-
-    return max(
-        0,
-        min(quantity, MAX_CONTRACTS),
-    )
+    return safe_max_affordable_contracts(usable_funds, ask)
 
 
 def build_entry_plan(
@@ -331,6 +321,7 @@ class MortificatioV01:
         )
 
         self.broker = broker
+        self._authorized_plan = None
 
     def close(self):
         self.lifecycle.close()
@@ -343,7 +334,12 @@ class MortificatioV01:
             "broker": self.broker.snapshot(),
         }
 
-    def authorize_entry(
+    def authorize_entry(self, *args, **kwargs):
+        raise MortificatioV01Error(
+            "Unverified entry blocked; use VerifiedDryRun"
+        )
+
+    def _authorize_entry_unverified(
         self,
         direction,
         spx_price,
@@ -388,6 +384,10 @@ class MortificatioV01:
             broker=self.broker.snapshot(),
         )
 
+        self._authorized_plan = (
+            plan.direction, plan.spx_price, plan.con_id, plan.strike,
+            plan.ask, plan.quantity, plan.estimated_cost, tuple(plan.chunks),
+        )
         return plan
 
     def simulate_entry(
@@ -411,6 +411,13 @@ class MortificatioV01:
 
         current = self.lifecycle.status()
 
+        supplied_plan = (
+            plan.direction, plan.spx_price, plan.con_id, plan.strike,
+            plan.ask, plan.quantity, plan.estimated_cost, tuple(plan.chunks),
+        )
+        if self._authorized_plan is None or supplied_plan != self._authorized_plan:
+            raise MortificatioV01Error("Entry plan is stale or changed")
+
         if current.state != ENTERING:
             raise MortificatioV01Error(
                 "Entry simulation requires ENTERING"
@@ -425,6 +432,9 @@ class MortificatioV01:
             raise MortificatioV01Error(
                 "Plan quantity differs from persistent authorization"
             )
+
+        if current.direction != plan.direction:
+            raise MortificatioV01Error("Plan direction differs from authorization")
 
         entry = EntryLifecycle(
             planned_qty=plan.quantity,
@@ -485,6 +495,8 @@ class MortificatioV01:
             entry_spx=plan.spx_price,
         )
 
+        self._authorized_plan = None
+
         return opened
 
     def process_spx(self, spx_price):
@@ -499,8 +511,16 @@ class MortificatioV01:
 
         lifecycle = self.lifecycle.status()
         strategy = self.strategy.status()
+        broker = self.broker.snapshot()
+        self.lifecycle._validate_snapshot(broker)
 
         if lifecycle.state == EXITING:
+            if not strategy.active or not strategy.exit_required:
+                raise MortificatioV01Error("EXITING lacks durable exit intent")
+            if broker.position_qty > lifecycle.quantity or (
+                broker.position_qty > 0 and broker.con_id != lifecycle.con_id
+            ):
+                raise MortificatioV01Error("Broker disagrees with EXITING lifecycle")
             return {
                 "action": "EXITING",
                 "reason": strategy.exit_reason,
@@ -522,6 +542,15 @@ class MortificatioV01:
         ):
             raise MortificatioV01Error(
                 "Strategy/lifecycle identity mismatch"
+            )
+
+        if (
+            broker.position_qty != lifecycle.quantity
+            or broker.con_id != lifecycle.con_id
+            or broker.open_order_count != 0
+        ):
+            raise MortificatioV01Error(
+                "Broker disagrees with OPEN lifecycle"
             )
 
         decision = self.strategy.process_spx(
@@ -614,6 +643,18 @@ class MortificatioV01:
             broker.position_qty,
             max_chunk=max_exit_chunk,
         )
+
+    def reconcile_post_flat_strategy(self):
+        """Finish the safe half of a crash between FLAT and strategy clear."""
+        lifecycle = self.lifecycle.status()
+        strategy = self.strategy.status()
+        broker = self.broker.snapshot()
+        self.lifecycle._validate_snapshot(broker)
+        if lifecycle.state != FLAT or not strategy.active or not strategy.exit_required:
+            raise MortificatioV01Error("No post-FLAT strategy cleanup pending")
+        if broker.position_qty != 0 or broker.con_id is not None or broker.open_order_count != 0:
+            raise MortificatioV01Error("Broker is not provably flat")
+        return self.strategy.clear_after_broker_flat()
 
     def simulate_one_exit_chunk(
         self,

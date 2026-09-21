@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+import math
+from safe_sizing import max_affordable_contracts as safe_max_affordable_contracts
 from typing import Iterable, Optional
 
 from executor_state import (
@@ -38,17 +40,7 @@ def max_affordable_contracts(
     usable_funds: float,
     ask: float,
 ) -> int:
-    if usable_funds <= 0:
-        return 0
-
-    if ask <= 0:
-        return 0
-
-    contract_cost = ask * OPTION_MULTIPLIER
-
-    qty = int(usable_funds // contract_cost)
-
-    return max(0, min(qty, MAX_CONTRACTS))
+    return safe_max_affordable_contracts(usable_funds, ask)
 
 
 def build_entry_plan(
@@ -74,10 +66,10 @@ def build_entry_plan(
     if direction not in {"CALL", "PUT"}:
         raise SelectionError("Direction must be CALL or PUT")
 
-    if spx_price <= 0:
+    if not math.isfinite(spx_price) or spx_price <= 0:
         raise SelectionError("SPX price must be positive")
 
-    if usable_funds <= 0:
+    if not math.isfinite(usable_funds) or usable_funds <= 0:
         raise SelectionError("No usable funds available")
 
     valid = []
@@ -86,7 +78,10 @@ def build_entry_plan(
         if not isinstance(c.con_id, int) or c.con_id <= 0:
             continue
 
-        if c.strike <= 0 or c.ask <= 0:
+        if (
+            not math.isfinite(c.strike) or not math.isfinite(c.ask)
+            or c.strike <= 0 or c.ask <= 0
+        ):
             continue
 
         qty = max_affordable_contracts(

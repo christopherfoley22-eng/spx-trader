@@ -2,12 +2,17 @@ import os
 import tempfile
 
 from mortificatio_v01 import (
-    MortificatioV01,
+    MortificatioV01 as BaseMortificatioV01,
     MortificatioV01Error,
     OptionQuote,
     SimulatedBroker,
     build_entry_plan,
 )
+
+class MortificatioV01(BaseMortificatioV01):
+    """Legacy lower-level attack harness; production entry uses VerifiedDryRun."""
+    authorize_entry = BaseMortificatioV01._authorize_entry_unverified
+
 
 from mortificatio_state import (
     FLAT,

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Optional
 import math
+from safe_sizing import max_affordable_contracts as safe_max_affordable_contracts
 
 
 # ============================================================
@@ -81,20 +82,7 @@ def max_affordable_contracts(
     ask: float,
 ) -> int:
 
-    if not math.isfinite(usable_funds) or not math.isfinite(ask):
-        return 0
-
-    if usable_funds <= 0:
-        return 0
-
-    if ask <= 0:
-        return 0
-
-    contract_cost = ask * OPTION_MULTIPLIER
-
-    qty = int(usable_funds // contract_cost)
-
-    return min(qty, MAX_CONTRACTS)
+    return safe_max_affordable_contracts(usable_funds, ask)
 
 
 def select_contract(

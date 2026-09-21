@@ -154,7 +154,11 @@ class Preflight(EWrapper, EClient):
             return
 
         # IBKR tick type 4 = LAST.
-        if tickType == 4 and price is not None and price > 0:
+        if (
+            tickType == 4 and isinstance(price, (int, float))
+            and not isinstance(price, bool) and math.isfinite(price)
+            and price > 0
+        ):
             self.spx_last = float(price)
             self.spx_last_time = time.monotonic()
 

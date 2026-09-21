@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 import math
+from safe_sizing import max_affordable_contracts as safe_max_affordable_contracts
 
 
 MAX_CONTRACTS = 25
@@ -27,13 +28,7 @@ def max_affordable_contracts(
     ask: float,
 ) -> int:
     """Whole contracts only, maximum 25."""
-    if available_funds <= 0 or ask <= 0:
-        return 0
-
-    contract_cost = ask * OPTION_MULTIPLIER
-    qty = math.floor(available_funds / contract_cost)
-
-    return min(qty, MAX_CONTRACTS)
+    return safe_max_affordable_contracts(available_funds, ask)
 
 
 def select_contract(
@@ -50,9 +45,13 @@ def select_contract(
       4. Never buy more than 25 contracts.
     """
 
+    if not math.isfinite(spx_price) or spx_price <= 0:
+        return None
+
     valid = [
         c for c in candidates
-        if c.ask > 0
+        if math.isfinite(c.strike) and c.strike > 0
+        and math.isfinite(c.ask) and c.ask > 0
     ]
 
     # ATM proximity is the primary priority.

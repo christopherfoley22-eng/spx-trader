@@ -15,7 +15,7 @@ exceed what MORTIFICATIO originally authorized.
 
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 from zoneinfo import ZoneInfo
@@ -116,6 +116,66 @@ class MortificatioState:
             """
         )
 
+        self.conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS mortificatio_account_binding (
+                singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
+                account_id TEXT NOT NULL
+            )
+            """
+        )
+
+    def bind_selected_account(self, account_id):
+        if not isinstance(account_id, str) or not account_id.strip():
+            raise MortificatioStateError("Selected account missing")
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.conn.execute(
+                "SELECT account_id FROM mortificatio_account_binding WHERE singleton = 1"
+            ).fetchone()
+            if row is None:
+                current = self.status()
+                if current.state != FLAT or current.trades_today != 0:
+                    raise MortificatioStateError("Cannot establish account during lifecycle")
+                self.conn.execute(
+                    "INSERT INTO mortificatio_account_binding VALUES (1, ?)",
+                    (account_id,),
+                )
+            elif row[0] != account_id:
+                raise MortificatioStateError("Selected account differs from persisted binding")
+            self.conn.execute("COMMIT")
+        except Exception:
+            self.conn.execute("ROLLBACK")
+            raise
+
+    def selected_account(self):
+        row = self.conn.execute(
+            "SELECT account_id FROM mortificatio_account_binding WHERE singleton = 1"
+        ).fetchone()
+        if row is None or not row[0]:
+            raise MortificatioStateError("Persisted account binding missing")
+        return row[0]
+
+    def reconcile_verified_broker(self, broker, selected_account, now_monotonic):
+        """Read-only reconciliation; uncertainty only blocks new entry."""
+        from simulation_evidence import validate_broker_snapshot
+
+        validate_broker_snapshot(broker, selected_account, now_monotonic)
+        if self.selected_account() != selected_account:
+            raise MortificatioStateError("Snapshot account differs from persisted binding")
+        local = self.status()
+        if local.state == FLAT:
+            if broker.position_qty == 0 and broker.open_order_count == 0:
+                return "ENTRY_ELIGIBLE"
+            return "BLOCK_ENTRY"
+        if local.state == OPEN:
+            if (broker.position_qty == local.quantity
+                    and broker.con_id == local.con_id
+                    and broker.open_order_count == 0):
+                return "MANAGE_EXISTING"
+            return "BLOCK_ENTRY"
+        return "BLOCK_ENTRY"
+
     def _initialize(self):
         row = self.conn.execute(
             """
@@ -178,13 +238,14 @@ class MortificatioState:
                 "Invalid broker snapshot object"
             )
 
-        if not broker.complete:
+        if broker.complete is not True:
             raise MortificatioStateError(
                 "Broker snapshot incomplete"
             )
 
         if (
             not isinstance(broker.position_qty, int)
+            or isinstance(broker.position_qty, bool)
             or broker.position_qty < 0
             or broker.position_qty > MAX_CONTRACTS
         ):
@@ -194,6 +255,7 @@ class MortificatioState:
 
         if (
             not isinstance(broker.open_order_count, int)
+            or isinstance(broker.open_order_count, bool)
             or broker.open_order_count < 0
         ):
             raise MortificatioStateError(
@@ -209,6 +271,7 @@ class MortificatioState:
         else:
             if (
                 not isinstance(broker.con_id, int)
+                or isinstance(broker.con_id, bool)
                 or broker.con_id <= 0
             ):
                 raise MortificatioStateError(
@@ -265,12 +328,19 @@ class MortificatioState:
             )
 
         if (
-            snapshot.trades_today < 0
+            not isinstance(snapshot.trades_today, int)
+            or snapshot.trades_today < 0
             or snapshot.trades_today > DAILY_TRADE_LIMIT
         ):
             raise MortificatioStateError(
                 "Persistent trade count corrupted"
             )
+
+        try:
+            if date.fromisoformat(snapshot.trading_day).isoformat() != snapshot.trading_day:
+                raise ValueError
+        except (TypeError, ValueError):
+            raise MortificatioStateError("Persistent trading date corrupted")
 
         if snapshot.state == FLAT:
             if (
@@ -342,20 +412,21 @@ class MortificatioState:
         return snapshot
 
     def _roll_day_if_safe(self):
-        current = self.status()
         today = self._today()
-
-        if current.trading_day == today:
-            return
-
-        if current.state != FLAT or current.quantity != 0:
-            raise MortificatioStateError(
-                "Trading day changed during active lifecycle"
-            )
 
         self.conn.execute("BEGIN IMMEDIATE")
 
         try:
+            current = self.status()
+            if today < current.trading_day:
+                raise MortificatioStateError("New York clock moved backward")
+            if today == current.trading_day:
+                self.conn.execute("COMMIT")
+                return
+            if current.state != FLAT or current.quantity != 0:
+                raise MortificatioStateError(
+                    "Trading day changed during active lifecycle"
+                )
             self.conn.execute(
                 """
                 UPDATE mortificatio_state
@@ -498,6 +569,11 @@ class MortificatioState:
                 "Entry recovery requires ENTERING"
             )
 
+        if current.trading_day != self._today():
+            raise MortificatioStateError(
+                "Entry fill date cannot be proven from broker snapshot"
+            )
+
         if broker.open_order_count != 0:
             raise MortificatioStateError(
                 "Cannot finalize while broker order unresolved"
@@ -527,6 +603,9 @@ class MortificatioState:
                 raise MortificatioStateError(
                     "Concurrent recovery detected"
                 )
+
+            if fresh.trading_day != self._today():
+                raise MortificatioStateError("Entry fill date changed")
 
             if fresh.con_id != broker.con_id:
                 raise MortificatioStateError(

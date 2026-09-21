@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, auto
+import math
 
 
 # ============================================================
@@ -36,6 +37,8 @@ def valid_number(x):
     return (
         x is not None
         and isinstance(x, (int, float))
+        and not isinstance(x, bool)
+        and math.isfinite(x)
         and x > 0
     )
 
@@ -66,22 +69,14 @@ def market_data_gate(
     # --------------------------------------------------------
 
     if (
-        spx.age_seconds < 0
-        or spx.age_seconds > MAX_AGE_SECONDS
+        not valid_age(spx.age_seconds)
     ):
-        return GateResult(
-            False,
-            "SPX_DATA_STALE",
-        )
+        return GateResult(False, "SPX_DATA_STALE")
 
     if (
-        option.age_seconds < 0
-        or option.age_seconds > MAX_AGE_SECONDS
+        not valid_age(option.age_seconds)
     ):
-        return GateResult(
-            False,
-            "OPTION_DATA_STALE",
-        )
+        return GateResult(False, "OPTION_DATA_STALE")
 
     # --------------------------------------------------------
     # 3. SPX NEEDS A VALID PRICE
@@ -122,6 +117,15 @@ def market_data_gate(
     return GateResult(
         True,
         "LIVE_FRESH_MARKET_DATA_CONFIRMED",
+    )
+
+
+def valid_age(value):
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+        and 0 <= value <= MAX_AGE_SECONDS
     )
 
 
@@ -318,6 +322,14 @@ expect_block(
     "OPTION_MARKET_CROSSED",
 )
 print("15. CROSSED OPTION MARKET BLOCKED: PASS")
+
+for bad in (float("nan"), float("inf"), -float("inf"), None):
+    expect_block(live_spx(age=bad), live_option(), "SPX_DATA_STALE")
+    expect_block(live_spx(), live_option(age=bad), "OPTION_DATA_STALE")
+    expect_block(live_spx(last=bad), live_option(), "SPX_PRICE_INVALID")
+    expect_block(live_spx(), live_option(bid=bad), "OPTION_BID_INVALID")
+    expect_block(live_spx(), live_option(ask=bad), "OPTION_ASK_INVALID")
+print("16. NON-FINITE OR MISSING QUOTES AND AGES BLOCKED: PASS")
 
 
 print()

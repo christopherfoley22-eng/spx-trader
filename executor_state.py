@@ -1,6 +1,6 @@
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from zoneinfo import ZoneInfo
 from typing import Optional
 
@@ -123,31 +123,35 @@ class ExecutorState:
         """, (event, detail, self._timestamp()))
 
     def _roll_day_if_safe(self):
-        status = self.status()
-
-        if status.trading_day == self._today():
-            return
-
-        # Never silently reset daily accounting while a trade lifecycle
-        # is active. That requires reconciliation first.
-        if status.state != FLAT or status.quantity != 0:
-            raise SafetyError(
-                "Trading day changed while Executor is not safely FLAT"
-            )
-
-        with self.db:
+        today = self._today()
+        self.db.execute("BEGIN IMMEDIATE")
+        try:
+            status = self.status()
+            if today < status.trading_day:
+                raise SafetyError("New York clock moved backward")
+            if today == status.trading_day:
+                self.db.execute("COMMIT")
+                return
+            if status.state != FLAT or status.quantity != 0:
+                raise SafetyError(
+                    "Trading day changed while Executor is not safely FLAT"
+                )
             self.db.execute("""
                 UPDATE executor_state
                 SET trades_today = 0,
                     trading_day = ?,
                     updated_at = ?
                 WHERE id = 1
-            """, (self._today(), self._timestamp()))
+            """, (today, self._timestamp()))
 
             self._journal(
                 "DAY_ROLLOVER",
                 "Daily trade count safely reset while FLAT"
             )
+            self.db.execute("COMMIT")
+        except Exception:
+            self.db.execute("ROLLBACK")
+            raise
 
     def status(self) -> ExecutorStatus:
         row = self.db.execute("""
@@ -165,11 +169,30 @@ class ExecutorState:
         if state not in VALID_STATES:
             raise SafetyError("Persistent state contains invalid state")
 
-        if qty < 0 or qty > MAX_CONTRACTS:
+        if not isinstance(qty, int) or qty < 0 or qty > MAX_CONTRACTS:
             raise SafetyError("Persistent quantity is impossible")
 
-        if trades < 0 or trades > DAILY_TRADE_LIMIT:
+        if not isinstance(trades, int) or trades < 0 or trades > DAILY_TRADE_LIMIT:
             raise SafetyError("Persistent daily trade count is impossible")
+
+        try:
+            if date.fromisoformat(day).isoformat() != day:
+                raise ValueError
+        except (TypeError, ValueError):
+            raise SafetyError("Persistent trading date is invalid")
+
+        if state == FLAT and (direction is not None or qty != 0 or con_id is not None):
+            raise SafetyError("Persistent FLAT state is contradictory")
+        if state == ENTERING and (
+            direction not in VALID_DIRECTIONS or qty != 0
+            or not isinstance(con_id, int) or con_id <= 0
+        ):
+            raise SafetyError("Persistent ENTERING state is contradictory")
+        if state in {OPEN, EXITING} and (
+            direction not in VALID_DIRECTIONS or qty < 1
+            or not isinstance(con_id, int) or con_id <= 0
+        ):
+            raise SafetyError("Persistent active state is contradictory")
 
         return ExecutorStatus(
             state=state,
@@ -182,19 +205,27 @@ class ExecutorState:
 
     @staticmethod
     def _validate_snapshot(snapshot: BrokerSnapshot):
-        if not snapshot.complete:
-            raise SafetyError("Broker snapshot incomplete")
-
-        if snapshot.position_qty < 0:
+        if not isinstance(snapshot, BrokerSnapshot) or snapshot.complete is not True:
+            raise SafetyError("Broker snapshot incomplete or invalid")
+        if (not isinstance(snapshot.position_qty, int)
+                or isinstance(snapshot.position_qty, bool)
+                or snapshot.position_qty < 0):
             raise SafetyError("Broker snapshot contains negative quantity")
 
         if snapshot.position_qty > MAX_CONTRACTS:
             raise SafetyError("Broker position exceeds Executor maximum")
 
-        if snapshot.open_order_count < 0:
+        if (not isinstance(snapshot.open_order_count, int)
+                or isinstance(snapshot.open_order_count, bool)
+                or snapshot.open_order_count < 0):
             raise SafetyError("Invalid broker open-order count")
 
-        if snapshot.position_qty > 0 and snapshot.con_id is None:
+        if snapshot.position_qty == 0 and snapshot.con_id is not None:
+            raise SafetyError("Flat broker snapshot contains conId")
+        if snapshot.position_qty > 0 and (
+            not isinstance(snapshot.con_id, int)
+            or isinstance(snapshot.con_id, bool) or snapshot.con_id <= 0
+        ):
             raise SafetyError("Broker position missing conId")
 
     def request_entry(
@@ -295,6 +326,11 @@ class ExecutorState:
 
             if current.state != ENTERING:
                 raise SafetyError("Executor is not ENTERING")
+
+            if current.trading_day != self._today():
+                raise SafetyError(
+                    "Entry fill date cannot be proven from broker snapshot"
+                )
 
             if current.con_id != con_id:
                 raise SafetyError("Fill conId differs from reserved contract")
