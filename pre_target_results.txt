@@ -1,0 +1,84 @@
+
+====================================================================================
+CASE 1 - IMMEDIATE LOSER
+PATH: +0.00 -> -1.00 -> -2.00 -> -3.00 -> -3.30
+====================================================================================
+arm 2.0 / floor +0.0     | peak=+0.00 | exit=-3.30 | INITIAL -3.25 STOP
+arm 2.5 / floor +0.0     | peak=+0.00 | exit=-3.30 | INITIAL -3.25 STOP
+arm 3.0 / floor +0.0     | peak=+0.00 | exit=-3.30 | INITIAL -3.25 STOP
+arm 3.0 / floor +0.5     | peak=+0.00 | exit=-3.30 | INITIAL -3.25 STOP
+arm 3.5 / floor +0.5     | peak=+0.00 | exit=-3.30 | INITIAL -3.25 STOP
+arm 3.5 / floor +1.0     | peak=+0.00 | exit=-3.30 | INITIAL -3.25 STOP
+arm 4.0 / floor +1.0     | peak=+0.00 | exit=-3.30 | INITIAL -3.25 STOP
+arm 4.0 / floor +1.5     | peak=+0.00 | exit=-3.30 | INITIAL -3.25 STOP
+
+====================================================================================
+CASE 2 - +3 THEN COMPLETE FAILURE
+PATH: +0.00 -> +1.00 -> +2.00 -> +3.00 -> +2.00 -> +1.00 -> +0.00 -> -1.00
+====================================================================================
+arm 2.0 / floor +0.0     | peak=+3.00 | exit=+0.00 | PRE-TARGET PROTECTION
+arm 2.5 / floor +0.0     | peak=+3.00 | exit=+0.00 | PRE-TARGET PROTECTION
+arm 3.0 / floor +0.0     | peak=+3.00 | exit=+0.00 | PRE-TARGET PROTECTION
+arm 3.0 / floor +0.5     | peak=+3.00 | exit=+0.00 | PRE-TARGET PROTECTION
+arm 3.5 / floor +0.5     | peak=+3.00 | exit=----- | STILL OPEN
+arm 3.5 / floor +1.0     | peak=+3.00 | exit=----- | STILL OPEN
+arm 4.0 / floor +1.0     | peak=+3.00 | exit=----- | STILL OPEN
+arm 4.0 / floor +1.5     | peak=+3.00 | exit=----- | STILL OPEN
+
+====================================================================================
+CASE 3 - +4.8 THEN COMPLETE REVERSAL
+PATH: +0.00 -> +1.00 -> +2.50 -> +4.00 -> +4.80 -> +4.00 -> +3.00 -> +2.00 -> +1.00 -> +0.00
+====================================================================================
+arm 2.0 / floor +0.0     | peak=+4.80 | exit=+0.00 | PRE-TARGET PROTECTION
+arm 2.5 / floor +0.0     | peak=+4.80 | exit=+0.00 | PRE-TARGET PROTECTION
+arm 3.0 / floor +0.0     | peak=+4.80 | exit=+0.00 | PRE-TARGET PROTECTION
+arm 3.0 / floor +0.5     | peak=+4.80 | exit=+0.00 | PRE-TARGET PROTECTION
+arm 3.5 / floor +0.5     | peak=+4.80 | exit=+0.00 | PRE-TARGET PROTECTION
+arm 3.5 / floor +1.0     | peak=+4.80 | exit=+1.00 | PRE-TARGET PROTECTION
+arm 4.0 / floor +1.0     | peak=+4.80 | exit=+1.00 | PRE-TARGET PROTECTION
+arm 4.0 / floor +1.5     | peak=+4.80 | exit=+1.00 | PRE-TARGET PROTECTION
+
+====================================================================================
+CASE 4 - +4.8 PULLBACK THEN +5
+PATH: +0.00 -> +1.00 -> +3.00 -> +4.00 -> +4.80 -> +4.20 -> +3.80 -> +4.40 -> +5.00
+====================================================================================
+arm 2.0 / floor +0.0     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 2.5 / floor +0.0     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 3.0 / floor +0.0     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 3.0 / floor +0.5     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 3.5 / floor +0.5     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 3.5 / floor +1.0     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 4.0 / floor +1.0     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 4.0 / floor +1.5     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+
+====================================================================================
+CASE 5 - +4.8 DEEPER PULLBACK THEN RUNNER
+PATH: +0.00 -> +2.00 -> +3.50 -> +4.80 -> +3.50 -> +3.00 -> +4.00 -> +4.70 -> +5.10 -> +6.00
+====================================================================================
+arm 2.0 / floor +0.0     | peak=+5.10 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 2.5 / floor +0.0     | peak=+5.10 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 3.0 / floor +0.0     | peak=+5.10 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 3.0 / floor +0.5     | peak=+5.10 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 3.5 / floor +0.5     | peak=+5.10 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 3.5 / floor +1.0     | peak=+5.10 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 4.0 / floor +1.0     | peak=+5.10 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 4.0 / floor +1.5     | peak=+5.10 | exit=----- | REACHED +5 -> LET IT RIDE
+
+====================================================================================
+CASE 6 - +2.5 THEN NORMAL NOISE THEN +5
+PATH: +0.00 -> +1.50 -> +2.50 -> +1.50 -> +0.80 -> +1.80 -> +3.00 -> +4.00 -> +5.00
+====================================================================================
+arm 2.0 / floor +0.0     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 2.5 / floor +0.0     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 3.0 / floor +0.0     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 3.0 / floor +0.5     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 3.5 / floor +0.5     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 3.5 / floor +1.0     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 4.0 / floor +1.0     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+arm 4.0 / floor +1.5     | peak=+5.00 | exit=----- | REACHED +5 -> LET IT RIDE
+
+====================================================================================
+PRE-TARGET COMPARISON COMPLETE
+NO PRE-TARGET MODEL HAS BEEN SELECTED
+SIMULATION ONLY - ZERO IBKR ORDERS
+====================================================================================
