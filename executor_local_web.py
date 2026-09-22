@@ -78,8 +78,10 @@ def make_handler(service):
             except (ValueError, json.JSONDecodeError):
                 return self._send(HTTPStatus.BAD_REQUEST, {"error": "Malformed request"})
             try:
-                if self.path == "/api/intent" and set(raw) == {"direction", "request_id"}:
+                if self.path == "/api/demo/intent" and set(raw) == {"direction", "request_id"}:
                     return self._send(HTTPStatus.OK, service.submit(raw["direction"], raw["request_id"]))
+                if self.path == "/api/execute" and set(raw) == {"direction", "request_id"}:
+                    return self._send(HTTPStatus.OK, service.execute(raw["direction"], raw["request_id"]))
                 if self.path == "/api/demo/load" and set(raw) == {"fixture"}:
                     return self._send(HTTPStatus.OK, service.load_fixture(raw["fixture"]))
                 if self.path == "/api/demo/advance" and not raw:

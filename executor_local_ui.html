@@ -61,7 +61,8 @@
       ids('demo-controls').hidden=observation;
       ids('state').textContent=pending?'Processing…':s.state;
       ids('reason').textContent=pending?'Waiting for the dry-run service':(s.reason||'');
-      ids('lifecycle').textContent='Lifecycle: '+s.lifecycle;
+      ids('lifecycle').textContent='Lifecycle: '+s.lifecycle+
+        (s.automation?' · '+s.automation.replaceAll('_',' '):'');
       ids('count').textContent=(s.trade_count===null?'?':s.trade_count)+'/2 trades';
       ids('calls').disabled=ids('puts').disabled=observation||pending>0||!s.ready;
       ids('load').disabled=ids('fixture').disabled=observation||pending>0||s.lifecycle!=='FLAT';
@@ -112,13 +113,15 @@
     async function intent(direction){
       if(intentPending||pending)return;
       intentPending=true;runQueued=false;
-      const outcome=await act('/api/intent',{direction,request_id:crypto.randomUUID()});
+      const outcome=await act('/api/execute',{direction,request_id:crypto.randomUUID()});
       intentPending=false;
       if(runQueued){
         runQueued=false;
         if(outcome.ok&&hasActiveReplay(outcome.status)){
           processing();
           await act('/api/demo/run',{});
+        }else if(outcome.ok&&outcome.status&&outcome.status.lifecycle==='FLAT'){
+          ids('progress').textContent='Automatic replay completed; no additional Run action was needed.';
         }else{
           const prior=ids('error').textContent;
           ids('error').textContent=(prior?prior+' · ':'')+

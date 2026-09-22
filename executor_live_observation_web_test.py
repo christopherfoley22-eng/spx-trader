@@ -17,7 +17,8 @@ assert received[-1][0] == 200
 assert received[-1][1]["mode"] == "READ-ONLY LIVE OBSERVATION / NO ORDERS"
 assert received[-1][1]["state"] == "DISCONNECTED"
 assert received[-1][1]["ready"] is False
-for route in ("/api/intent", "/api/demo/load", "/api/demo/advance", "/api/demo/run"):
+for route in ("/api/demo/intent", "/api/execute", "/api/demo/load",
+              "/api/demo/advance", "/api/demo/run"):
     handler.path = route
     handler.do_POST()
     assert received[-1][0] == 403

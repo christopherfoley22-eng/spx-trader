@@ -305,18 +305,18 @@ class LocalHTTPTest(unittest.TestCase):
     def test_http_auth_csrf_and_server_side_gate(self):
         rid = request_id()
         body = {"direction": "CALL", "request_id": rid}
-        self.assertEqual(self.call("POST", "/api/intent", body,
+        self.assertEqual(self.call("POST", "/api/demo/intent", body,
                                    {"Content-Type": "application/json"})[0], 403)
         headers = self.auth()
         bad_origin = dict(headers, Origin="http://evil.example")
-        self.assertEqual(self.call("POST", "/api/intent", body, bad_origin)[0], 403)
+        self.assertEqual(self.call("POST", "/api/demo/intent", body, bad_origin)[0], 403)
         bad_csrf = dict(headers, **{"X-CSRF-Token": "wrong"})
-        self.assertEqual(self.call("POST", "/api/intent", body, bad_csrf)[0], 403)
-        self.assertEqual(self.call("POST", "/api/intent", body, headers)[0], 200)
-        self.assertEqual(self.call("POST", "/api/intent", body, headers)[0], 200)
-        self.assertEqual(self.call("POST", "/api/intent",
+        self.assertEqual(self.call("POST", "/api/demo/intent", body, bad_csrf)[0], 403)
+        self.assertEqual(self.call("POST", "/api/demo/intent", body, headers)[0], 200)
+        self.assertEqual(self.call("POST", "/api/demo/intent", body, headers)[0], 200)
+        self.assertEqual(self.call("POST", "/api/demo/intent",
                                    {"direction": "PUT", "request_id": request_id()}, headers)[0], 409)
-        self.assertEqual(self.call("POST", "/api/intent",
+        self.assertEqual(self.call("POST", "/api/demo/intent",
                                    {"direction": "CALL", "request_id": request_id(),
                                     "quantity": 25}, headers)[0], 400)
         for path in ("/api/sell", "/api/exit", "/api/order", "/api/preview"):
@@ -326,6 +326,25 @@ class LocalHTTPTest(unittest.TestCase):
         self.assertEqual(status["trade_count"], 1)
         self.assertNotIn(ACCOUNT.encode(), self.call("GET", "/")[1])
         self.assertNotIn(ACCOUNT, json.dumps(status))
+
+    def test_direction_only_execute_endpoint_runs_to_confirmed_flat(self):
+        body = {"direction": "CALL", "request_id": request_id()}
+        self.assertEqual(self.call("POST", "/api/execute", body,
+                                   {"Content-Type": "application/json"})[0], 403)
+        headers = self.auth()
+        self.assertEqual(self.call("POST", "/api/intent", body, headers)[0], 400)
+        code, raw, _ = self.call("POST", "/api/execute", body, headers)
+        self.assertEqual(code, 200, raw)
+        response = json.loads(raw)
+        self.assertTrue(response["automatic"])
+        self.assertEqual(response["status"]["lifecycle"], "FLAT")
+        self.assertEqual(response["status"]["state"], "CONFIRMED FLAT")
+        self.assertEqual(response["status"]["trade_count"], 1)
+        duplicate = json.loads(self.call("POST", "/api/execute", body, headers)[1])
+        self.assertEqual(duplicate["result"], "DUPLICATE")
+        self.assertEqual(self.call("POST", "/api/execute",
+                                   {"direction": "PUT", "request_id": request_id(),
+                                    "quantity": 1}, headers)[0], 400)
 
     def _assert_immediate_winner_flat(self, direction):
         status = json.loads(self.call("GET", "/api/status")[1])
@@ -366,14 +385,14 @@ class LocalHTTPTest(unittest.TestCase):
         self.assertEqual((before["state"], before["lifecycle"], before["trade_count"]),
                          ("READY", "FLAT", 0))
         rid = request_id()
-        code, raw, _ = self.call("POST", "/api/intent",
+        code, raw, _ = self.call("POST", "/api/demo/intent",
                                  {"direction": direction, "request_id": rid}, headers)
         self.assertEqual(code, 200, raw)
         entered = json.loads(self.call("GET", "/api/status")[1])
         self.assertEqual((entered["lifecycle"], entered["replay_index"],
                           entered["position"]["quantity"], entered["trade_count"]),
                          ("OPEN", 0, 11, 1))
-        self.assertEqual(self.call("POST", "/api/intent",
+        self.assertEqual(self.call("POST", "/api/demo/intent",
                                    {"direction": direction, "request_id": rid}, headers)[0], 200)
         code, raw, _ = self.call("POST", "/api/demo/run", {}, headers)
         self.assertEqual(code, 200, raw)
@@ -419,7 +438,7 @@ class LocalHTTPTest(unittest.TestCase):
                 self.service.submit = delayed_submit
                 try:
                     with ThreadPoolExecutor(max_workers=2) as pool:
-                        intent = pool.submit(self.call, "POST", "/api/intent",
+                        intent = pool.submit(self.call, "POST", "/api/demo/intent",
                                              {"direction": direction,
                                               "request_id": request_id()}, headers)
                         self.assertTrue(started.wait(5))
@@ -462,10 +481,10 @@ class LocalHTTPTest(unittest.TestCase):
         rid = request_id()
         try:
             with ThreadPoolExecutor(max_workers=3) as pool:
-                first = pool.submit(self.call, "POST", "/api/intent",
+                first = pool.submit(self.call, "POST", "/api/demo/intent",
                                     {"direction": "CALL", "request_id": rid}, headers)
                 self.assertTrue(entered.wait(5))
-                second = pool.submit(self.call, "POST", "/api/intent",
+                second = pool.submit(self.call, "POST", "/api/demo/intent",
                                      {"direction": "CALL", "request_id": rid}, headers)
                 run = pool.submit(self.call, "POST", "/api/demo/run", {}, headers)
                 self.assertTrue(run_arrived.wait(5))
@@ -487,7 +506,7 @@ class LocalHTTPTest(unittest.TestCase):
         else:
             self.assertEqual(json.loads(second_raw)["result"], "DUPLICATE")
         self.assertEqual(run_code, 200, run_raw)
-        retry_code, retry_raw, _ = self.call("POST", "/api/intent",
+        retry_code, retry_raw, _ = self.call("POST", "/api/demo/intent",
                                              {"direction": "CALL", "request_id": rid}, headers)
         self.assertEqual(retry_code, 200)
         self.assertEqual(json.loads(retry_raw)["result"], "DUPLICATE")
@@ -499,7 +518,7 @@ class LocalHTTPTest(unittest.TestCase):
         headers = self.auth()
         self.assertEqual(self.call("POST", "/api/demo/load",
                                    {"fixture": "exact_five_transition"}, headers)[0], 200)
-        self.assertEqual(self.call("POST", "/api/intent",
+        self.assertEqual(self.call("POST", "/api/demo/intent",
                                    {"direction": "CALL", "request_id": request_id()}, headers)[0], 200)
         code, raw, _ = self.call("POST", "/api/demo/run", {}, headers)
         self.assertEqual(code, 409)
@@ -509,7 +528,7 @@ class LocalHTTPTest(unittest.TestCase):
         self.assertEqual(status["lifecycle"], "OPEN")
         self.assertEqual(status["development_status"], "REPLAY ENDED WITH ACTIVE POSITION")
         self.assertFalse(status["ready"])
-        self.assertEqual(self.call("POST", "/api/intent",
+        self.assertEqual(self.call("POST", "/api/demo/intent",
                                    {"direction": "PUT", "request_id": request_id()}, headers)[0], 409)
         with sqlite3.connect(self.service.executor_path) as db:
             self.assertEqual(db.execute("SELECT broker_qty FROM controller").fetchone()[0], 11)

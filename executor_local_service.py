@@ -60,7 +60,10 @@ class LocalDryRunService:
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA synchronous=FULL")
         self.db.execute("CREATE TABLE IF NOT EXISTS settings (singleton INTEGER PRIMARY KEY CHECK(singleton=1), fixture TEXT NOT NULL)")
-        self.db.execute("CREATE TABLE IF NOT EXISTS requests (request_id TEXT PRIMARY KEY, direction TEXT NOT NULL, session_json TEXT NOT NULL, completed INTEGER NOT NULL DEFAULT 0)")
+        self.db.execute("CREATE TABLE IF NOT EXISTS requests (request_id TEXT PRIMARY KEY, direction TEXT NOT NULL, session_json TEXT NOT NULL, completed INTEGER NOT NULL DEFAULT 0, automatic INTEGER NOT NULL DEFAULT 0 CHECK(automatic IN (0,1)))")
+        columns = {row[1] for row in self.db.execute("PRAGMA table_info(requests)")}
+        if "automatic" not in columns:
+            self.db.execute("ALTER TABLE requests ADD COLUMN automatic INTEGER NOT NULL DEFAULT 0 CHECK(automatic IN (0,1))")
         self.db.execute("INSERT OR IGNORE INTO settings VALUES (1,'immediate_winner')")
         self.db_path.chmod(0o600)
 
@@ -80,7 +83,7 @@ class LocalDryRunService:
         return self.factory(request_id, direction, PATHS[self._fixture()], count * 10)
 
     def _active(self):
-        rows = self.db.execute("SELECT request_id,direction,session_json FROM requests WHERE completed=0 ORDER BY rowid").fetchall()
+        rows = self.db.execute("SELECT request_id,direction,session_json,automatic FROM requests WHERE completed=0 ORDER BY rowid").fetchall()
         if len(rows) > 1:
             raise LocalServiceError("Contradictory active request registry")
         return rows[0] if rows else None
@@ -173,7 +176,9 @@ class LocalDryRunService:
             session = self._session(active)
             runner = DurableReplayRunner(session, self.executor_path)
             try:
-                if runner._progress()[3] < session.intent_sequence:
+                if active[3]:
+                    runner.run()
+                elif runner._progress()[3] < session.intent_sequence:
                     runner.run(stop_index=session.intent_sequence)
                 replay = runner.result()
                 status = runner.controller.status()
@@ -183,6 +188,7 @@ class LocalDryRunService:
                         and status.phase == "FLAT"):
                     self.db.execute("UPDATE requests SET completed=1 WHERE request_id=?", (active[0],))
                     active = None
+                    replay = None
             finally:
                 runner.close()
         if not active:
@@ -246,6 +252,7 @@ class LocalDryRunService:
                                     else "INITIAL_STOP",
                         "fixed_profit_floor_points": "1.25" if status.profit_protection else None,
                         "exit_reason": status.exit_reason}
+        automatic_active = bool(active and active[3])
         return {"mode": "DRY RUN / SIMULATION", "state": view,
                 "lifecycle": phase, "ready": ready, "reason": reason,
                 "trade_count": count, "trade_limit": 2,
@@ -253,7 +260,10 @@ class LocalDryRunService:
                 "development_status": "REPLAY ENDED WITH ACTIVE POSITION" if replay_ended_active else None,
                 "fixture": self._fixture(), "fixtures": sorted(PATHS),
                 "replay_index": replay["last_complete_index"] if replay else None,
-                "replay_total": len(self._session(active).events) if active else None}
+                "replay_total": len(self._session(active).events) if active else None,
+                "automation": "RUNNING_TO_CONFIRMED_FLAT" if automatic_active
+                              else "DIRECTION_ONLY_AUTOMATION_AVAILABLE",
+                "operator_action_required": False if automatic_active else None}
 
     @staticmethod
     def _safe_detail(kind, raw):
@@ -286,9 +296,11 @@ class LocalDryRunService:
         finally:
             self.lock.release()
 
-    def submit(self, direction, request_id):
+    def submit(self, direction, request_id, automatic=False):
         if direction not in {"CALL", "PUT"} or not isinstance(request_id, str) or not REQUEST_ID.fullmatch(request_id):
             raise LocalServiceError("Malformed direction or request ID")
+        if not isinstance(automatic, bool):
+            raise LocalServiceError("Automation mode malformed")
         with self._intent_guard():
             old = self.db.execute("SELECT request_id,direction,session_json FROM requests WHERE request_id=?",
                                   (request_id,)).fetchone()
@@ -296,7 +308,11 @@ class LocalDryRunService:
                 if old[1] != direction:
                     raise LocalServiceError("Request ID already bound to another direction")
                 return {"result": "DUPLICATE", "status": self.status()}
-            state = self._state()
+            try:
+                state = self._state()
+            except Exception as exc:
+                raise LocalServiceError("Persisted state or evidence requires recovery",
+                                        code="RECOVERY_REQUIRED") from exc
             if not state["ready"]:
                 raise LocalServiceError(state["reason"] or "New simulated entry blocked")
             raw = self._raw(request_id, direction, state["trade_count"])
@@ -307,14 +323,28 @@ class LocalDryRunService:
             try:
                 if self._active() or self.db.execute("SELECT 1 FROM requests WHERE request_id=?", (request_id,)).fetchone():
                     raise LocalServiceError("Intent race blocked")
-                self.db.execute("INSERT INTO requests VALUES (?,?,?,0)",
-                                (request_id, direction, json.dumps(raw, sort_keys=True)))
+                self.db.execute("INSERT INTO requests(request_id,direction,session_json,completed,automatic) VALUES (?,?,?,0,?)",
+                                (request_id, direction, json.dumps(raw, sort_keys=True),
+                                 int(automatic)))
                 self.db.execute("COMMIT")
             except Exception:
                 self.db.execute("ROLLBACK")
                 raise
-            self._progress((request_id, direction, json.dumps(raw)), stop_index=0)
-            return {"result": "ACCEPTED", "status": self.status()}
+            row = (request_id, direction, json.dumps(raw), int(automatic))
+            self._progress(row, stop_index=0)
+            if automatic:
+                result, phase, _, _ = self._progress(
+                    row, stop_index=len(session.events) - 1)
+                if (result["last_complete_index"] != len(session.events) - 1
+                        or phase != "FLAT"):
+                    raise LocalServiceError("REPLAY ENDED WITH ACTIVE POSITION",
+                                            code="REPLAY_ENDED_ACTIVE_POSITION")
+            return {"result": "ACCEPTED", "automatic": automatic,
+                    "status": self.status()}
+
+    def execute(self, direction, request_id):
+        """Normal direction-only product path; no later operator action."""
+        return self.submit(direction, request_id, automatic=True)
 
     def load_fixture(self, name):
         if not isinstance(name, str) or name not in PATHS:

@@ -64,13 +64,14 @@ async function scenario(direction, result = "flat") {
     if (path === "/api/status") {
       return {ok: true, json: async () => clone(server)};
     }
-    if (path === "/api/intent") {
+    if (path === "/api/execute") {
       assert.equal(JSON.parse(options.body).direction, direction);
       await intentGate;
       if (result === "intent-error") {
         return {ok: false, json: async () => ({error: "Intent blocked", retryable: true})};
       }
-      server = status("OPEN", direction);
+      server = (result === "run-error" || result === "run-open")
+        ? status("OPEN", direction) : flatAfterTrade();
       return {ok: true, json: async () => ({result: "ACCEPTED"})};
     }
     if (path === "/api/demo/run") {
@@ -104,12 +105,10 @@ async function scenario(direction, result = "flat") {
   await clicked;
   await settle();
   const runRequests = requests.filter(item => item.path === "/api/demo/run");
-  assert.equal(runRequests.length, result === "intent-error" ? 0 : 1);
+  assert.equal(runRequests.length,
+               result === "run-error" || result === "run-open" ? 1 : 0);
   if (result === "flat") {
-    const runIndex = requests.findIndex(item => item.path === "/api/demo/run");
-    assert.ok(requests.slice(0, runIndex).some(item =>
-      item.path === "/api/status" && item.serverState === "OPEN"),
-    "A fresh OPEN status must precede queued Run");
+    assert.equal(requests.filter(item => item.path === "/api/execute").length, 1);
     assert.equal(get("state").textContent, "CONFIRMED FLAT");
     assert.equal(get("lifecycle").textContent, "Lifecycle: FLAT");
     assert.equal(get("count").textContent, "1/2 trades");
