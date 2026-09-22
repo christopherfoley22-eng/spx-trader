@@ -9,6 +9,7 @@ from pathlib import Path
 import secrets
 
 from executor_local_service import LocalDryRunService, LocalServiceError
+from executor_live_observation_service import LocalReadOnlyObservationService
 
 HTML = Path(__file__).with_name("executor_local_ui.html").read_bytes()
 
@@ -53,6 +54,10 @@ def make_handler(service):
         def do_POST(self):
             if not self._host_ok():
                 return self._send(HTTPStatus.FORBIDDEN, {"error": "Invalid local host"})
+            if isinstance(service, LocalReadOnlyObservationService):
+                return self._send(HTTPStatus.FORBIDDEN,
+                                  {"error": "Observation mode has no mutating operations",
+                                   "code": "READ_ONLY_OBSERVATION", "retryable": False})
             origin = "http://127.0.0.1:{}".format(self.server.server_port)
             cookie = self.headers.get("Cookie", "")
             token = self.headers.get("X-CSRF-Token", "")
@@ -102,15 +107,20 @@ def main():
     parser = argparse.ArgumentParser(description="Local Executor DRY RUN / SIMULATION UI")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--state-dir", default=".executor-local")
+    parser.add_argument("--mode", choices=("simulation", "observation"), default="simulation")
     args = parser.parse_args()
-    service = LocalDryRunService(args.state_dir)
+    service = (LocalDryRunService(args.state_dir) if args.mode == "simulation"
+               else LocalReadOnlyObservationService())
     server = make_server(service, args.port)
-    print("Executor DRY RUN / SIMULATION: http://127.0.0.1:{}".format(server.server_port))
+    print("Executor {}: http://127.0.0.1:{}".format(
+        "DRY RUN / SIMULATION" if args.mode == "simulation" else "READ-ONLY OBSERVATION",
+        server.server_port))
     try:
         server.serve_forever()
     finally:
         server.server_close()
-        service.close()
+        if isinstance(service, LocalDryRunService):
+            service.close()
 
 
 if __name__ == "__main__":

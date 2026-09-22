@@ -23,14 +23,14 @@
   </style>
 </head>
 <body>
-  <div class="banner">DRY RUN / SIMULATION · NO REAL ORDERS</div>
+  <div class="banner" id="mode-banner">DRY RUN / SIMULATION · NO REAL ORDERS</div>
   <main>
-    <header><div><h1>Executor</h1><small>Local synthetic session</small></div><div id="count">0/2 trades</div></header>
+    <header><div><h1>Executor</h1><small id="mode-subtitle">Local synthetic session</small></div><div id="count">0/2 trades</div></header>
     <section class="panel" aria-live="polite"><div class="muted">Executor status</div><div class="state" id="state">Loading…</div><div class="reason" id="reason"></div><div class="muted" id="lifecycle"></div></section>
     <div class="actions"><button class="call" id="calls" disabled>CALLS</button><button class="put" id="puts" disabled>PUTS</button></div>
     <section class="panel" id="position-panel" hidden><h2>Simulated position</h2><dl id="position"></dl></section>
     <section class="panel"><h2>Recent activity</h2><ol id="activity"></ol></section>
-    <section class="dev"><h2>Development replay controls</h2><p class="muted">Synthetic fixtures only. These controls advance market observations; Executor decides every exit.</p>
+    <section class="dev" id="demo-controls"><h2>Development replay controls</h2><p class="muted">Synthetic fixtures only. These controls advance market observations; Executor decides every exit.</p>
       <select id="fixture" aria-label="Canonical synthetic fixture" disabled></select>
       <div><button id="load" disabled>Load fixture</button><button id="advance" disabled>Advance one</button><span class="run-slot"><button id="run" disabled>Run remaining</button><button id="queue-run" hidden>Run remaining</button></span></div>
       <p class="muted" id="progress" aria-live="polite"></p>
@@ -55,14 +55,18 @@
       const data=await response.json();if(!response.ok){const error=Error(data.error||'Request blocked');error.code=data.code;error.retryable=data.retryable;throw error}return data;
     }
     function render(s){
+      const observation=String(s.mode||'').startsWith('READ-ONLY');
+      ids('mode-banner').textContent=(s.mode||'DRY RUN / SIMULATION')+' · NO REAL ORDERS';
+      ids('mode-subtitle').textContent=observation?'Local status-only observation':'Local synthetic session';
+      ids('demo-controls').hidden=observation;
       ids('state').textContent=pending?'Processing…':s.state;
       ids('reason').textContent=pending?'Waiting for the dry-run service':(s.reason||'');
       ids('lifecycle').textContent='Lifecycle: '+s.lifecycle;
       ids('count').textContent=(s.trade_count===null?'?':s.trade_count)+'/2 trades';
-      ids('calls').disabled=ids('puts').disabled=pending>0||!s.ready;
-      ids('load').disabled=ids('fixture').disabled=pending>0||s.lifecycle!=='FLAT';
+      ids('calls').disabled=ids('puts').disabled=observation||pending>0||!s.ready;
+      ids('load').disabled=ids('fixture').disabled=observation||pending>0||s.lifecycle!=='FLAT';
       const canAdvance=pending===0&&s.replay_index!==null&&s.replay_index<s.replay_total-1;
-      ids('advance').disabled=ids('run').disabled=!canAdvance;
+      ids('advance').disabled=ids('run').disabled=observation||!canAdvance;
       runControls();
       const p=s.position;ids('position-panel').hidden=!p;
       ids('position').replaceChildren();

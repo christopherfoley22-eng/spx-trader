@@ -5,12 +5,48 @@ from pathlib import Path
 
 FORBIDDEN = {
     "placeOrder", "cancelOrder", "reqGlobalCancel", "exerciseOptions",
-    "replaceFA", "reqAutoOpenOrders", "Order",
+    "replaceFA", "reqAutoOpenOrders", "Order", "placeOrderAsync",
+    "cancelOrderAsync", "reqExecutions", "reqFundamentalData",
+    "reqWshEventData", "reqWshMetaData", "reqFinancialAdvisorConfig",
+    "requestFA", "updateAccountValue", "updatePortfolio",
+    "setServerLogLevel",
 }
 
+MUTATION_API = {"placeOrder", "cancelOrder", "reqGlobalCancel",
+                "exerciseOptions", "replaceFA", "reqAutoOpenOrders",
+                "setServerLogLevel"}
+
 root = Path(__file__).resolve().parent
+probe_tree = ast.parse((root / "ibkr_read_only_validation.py").read_text())
+probe_class = next(node for node in probe_tree.body
+                   if isinstance(node, ast.ClassDef) and node.name == "ReadOnlyProbe")
+overrides = {node.name: node for node in probe_class.body
+             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
+for method in MUTATION_API:
+    assert method in overrides, ("ReadOnlyProbe must override broker mutation", method)
+    body = overrides[method].body
+    assert len(body) == 1 and isinstance(body[0], ast.Raise), ("Unsafe probe override", method)
+bridge_tree = ast.parse((root / "ibkr_adapter_read_only_validation.py").read_text())
+allowed_bridge_calls = {
+    "connect", "reqAccountSummary", "reqPositions", "reqAllOpenOrders",
+    "reqContractDetails", "reqSecDefOptParams", "reqMarketDataType",
+    "reqMktData", "cancelPositions", "cancelAccountSummary",
+    "cancelMktData", "disconnect", "isConnected",
+}
+for node in ast.walk(bridge_tree):
+    if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name) and node.func.value.id == "app"):
+        assert node.func.attr in allowed_bridge_calls, ("Unexpected TWS bridge API", node.func.attr)
 for path in root.glob("*.py"):
     tree = ast.parse(path.read_text(), filename=str(path))
+    if path.name in {"executor_ibkr_observation.py", "executor_live_observation_service.py"}:
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                names = ([alias.name for alias in node.names] if isinstance(node, ast.Import)
+                         else [node.module or ""])
+                assert not any(name.startswith("ibapi") for name in names), (path.name, "Broker client import")
+            if isinstance(node, ast.Attribute):
+                assert node.attr not in MUTATION_API, (path.name, node.lineno, node.attr)
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             assert node.func.attr not in FORBIDDEN, (path.name, node.lineno, node.func.attr)

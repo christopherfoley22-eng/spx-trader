@@ -78,6 +78,12 @@ class ReadOnlyProbe(EWrapper, EClient):
     def replaceFA(self, *args, **kwargs):
         raise RuntimeError("Account mutation disabled")
 
+    def reqAutoOpenOrders(self, *args, **kwargs):
+        raise RuntimeError("Order binding disabled")
+
+    def setServerLogLevel(self, *args, **kwargs):
+        raise RuntimeError("TWS settings mutation disabled")
+
     def nextValidId(self, orderId):
         self.ready.set()
 
