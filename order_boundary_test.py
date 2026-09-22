@@ -31,7 +31,7 @@ allowed_bridge_calls = {
     "connect", "reqAccountSummary", "reqPositions", "reqAllOpenOrders",
     "reqContractDetails", "reqSecDefOptParams", "reqMarketDataType",
     "reqMktData", "cancelPositions", "cancelAccountSummary",
-    "cancelMktData", "disconnect", "isConnected",
+    "cancelMktData", "disconnect", "isConnected", "safe_error_events",
 }
 for node in ast.walk(bridge_tree):
     if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)

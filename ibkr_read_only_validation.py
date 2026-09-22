@@ -2,6 +2,8 @@
 
 import math
 import os
+import json
+import re
 import secrets
 import threading
 import time
@@ -29,11 +31,54 @@ TAGS = (
     "LookAheadAvailableFunds",
 )
 INFO_CODES = {2104, 2106, 2107, 2108, 2158}
+CONNECTION_ERROR_CODES = {326, 502, 504, 1100, 1300}
+REQUEST_LABELS = {
+    8101: "ACCOUNT_SUMMARY",
+    8102: "SPX_UNDERLYING_CONTRACT_DETAILS",
+    8103: "CURRENT_DAY_SPXW_SECURITY_DEFINITION",
+    8104: "SPX_UNDERLYING_MARKET_DATA",
+    8105: "EXACT_SPXW_OPTION_CONTRACT_DETAILS",
+    8106: "EXACT_SPXW_OPTION_MARKET_DATA",
+}
+
+
+def _safe_error_text(value):
+    """Keep diagnostic wording while removing likely runtime identities/values."""
+    if not isinstance(value, str):
+        return "[NON_TEXT_ERROR]"
+    if value.lstrip().startswith(("{", "[")):
+        try:
+            parsed = json.loads(value)
+        except (ValueError, TypeError):
+            pass
+        else:
+            def scrub(item):
+                if isinstance(item, dict):
+                    return {key: "[REDACTED]" if re.search(
+                        r"(?i)account|user|token|password|credential|balance|cash|fund|price|amount|margin|equity|conid",
+                        str(key)) else scrub(entry)
+                        for key, entry in item.items()}
+                if isinstance(item, list):
+                    return [scrub(entry) for entry in item]
+                return item
+            value = json.dumps(scrub(parsed), ensure_ascii=True, separators=(",", ":"))
+    text = value.replace("\r", " ").replace("\n", " ").replace("\x00", " ")
+    text = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL]", text)
+    text = re.sub(r"(?i)\b(?:DU|U|D|F)\d{5,}\b", "[ACCOUNT_ID]", text)
+    text = re.sub(r"\b\d{6,}\b", "[IDENTIFIER]", text)
+    text = re.sub(r"(?i)\b(account|username|user|token|password|credential)\s*[:=]\s*[^\s,;{}]+",
+                  lambda match: match.group(1) + "=[REDACTED]", text)
+    text = re.sub(r"(?i)\b(balance|cash|funds|buying power|price|amount|margin|equity)\s*[:=]\s*[$€£]?[+-]?\d[\d,.]*",
+                  lambda match: match.group(1) + "=[REDACTED]", text)
+    text = re.sub(r"[$€£]\s*[+-]?\d[\d,.]*", "[FINANCIAL_VALUE]", text)
+    return text
 
 
 class ReadOnlyProbe(EWrapper, EClient):
-    def __init__(self):
+    def __init__(self, wall_clock=None, monotonic_clock=None):
         EClient.__init__(self, self)
+        self._wall_clock = wall_clock or (lambda: datetime.now(ZoneInfo("UTC")))
+        self._monotonic_clock = monotonic_clock or time.monotonic
         self.ready = threading.Event()
         self.accounts_done = threading.Event()
         self.summary_done = threading.Event()
@@ -59,6 +104,7 @@ class ReadOnlyProbe(EWrapper, EClient):
         self.option_ask = None
         self.error_codes = set()
         self.error_codes_by_request = {}
+        self.error_events = []  # In-memory only; never persist raw broker text.
         self.disconnected = False
         self.duplicate_client = False
 
@@ -163,6 +209,27 @@ class ReadOnlyProbe(EWrapper, EClient):
             event.set()
 
     def error(self, reqId, errorCode, errorString, advancedOrderRejectJson=""):
+        receipt_utc = self._wall_clock().isoformat()
+        receipt_monotonic = self._monotonic_clock()
+        request_id = reqId if isinstance(reqId, int) and not isinstance(reqId, bool) else None
+        if errorCode in INFO_CODES:
+            category = "INFORMATIONAL"
+        elif errorCode in CONNECTION_ERROR_CODES or request_id is None or request_id < 0:
+            category = "CONNECTION_OR_SYSTEM"
+        elif request_id in REQUEST_LABELS:
+            category = "REQUEST_SPECIFIC"
+        else:
+            category = "UNKNOWN_REQUEST"
+        self.error_events.append({
+            "request_id": request_id,
+            "request_label": REQUEST_LABELS.get(request_id, "GLOBAL_OR_SYSTEM" if request_id is None or request_id < 0 else "UNKNOWN_REQUEST_ID"),
+            "category": category,
+            "code": errorCode,
+            "message": errorString,  # Complete callback text retained in memory.
+            "advanced_text": advancedOrderRejectJson,
+            "receipt_utc": receipt_utc,
+            "receipt_monotonic": receipt_monotonic,
+        })
         if errorCode not in INFO_CODES:
             self.error_codes.add(errorCode)
             self.error_codes_by_request.setdefault(reqId, set()).add(errorCode)
@@ -170,6 +237,14 @@ class ReadOnlyProbe(EWrapper, EClient):
             self.duplicate_client = True
         if errorCode in {326, 502, 504, 1100, 1300}:
             self.connectionClosed()
+
+    def safe_error_events(self):
+        """Sanitized report copies; receipt clocks are not market source clocks."""
+        return [{**event,
+                 "message": _safe_error_text(event["message"]),
+                 "advanced_text": _safe_error_text(event["advanced_text"])
+                 if event["advanced_text"] else ""}
+                for event in self.error_events]
 
 
 def finite_decimal(value):

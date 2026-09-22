@@ -6,6 +6,7 @@ manufactures exchange/source timestamps from local callback receipt times.
 
 import math
 import os
+import json
 import secrets
 import threading
 import time
@@ -243,7 +244,6 @@ def main():
         _print("adapter_market_data_blocked", "MARKET DATA UNAVAILABLE OR STALE" in observed.reasons)
         _print("adapter_executable", observed.executable)
         _print("adapter_callback_failure", app.adapter_failure)
-        _print("noninformational_error_codes", ",".join(str(x) for x in sorted(app.error_codes)) or "NONE")
         _print("api_visible_orders_scope", observed.order_scope)
         return 0
     finally:
@@ -259,6 +259,11 @@ def main():
         app.disconnect()
         if thread is not None:
             thread.join(timeout=2)
+        _print("noninformational_error_codes", ",".join(str(x) for x in sorted(app.error_codes)) or "NONE")
+        _print("error_timestamp_provenance", "LOCAL_RECEIPT_ONLY_NOT_EXCHANGE_SOURCE")
+        _print("error_event_count", len(app.error_events))
+        for index, event in enumerate(app.safe_error_events(), 1):
+            _print("error_event_{}".format(index), json.dumps(event, sort_keys=True))
         _print("disconnected", not app.isConnected())
 
 
