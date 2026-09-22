@@ -15,7 +15,7 @@ WORKER = Path(__file__).with_name("executor_replay_process_worker.py")
 
 
 def session(name, direction="CALL", offset=0):
-    raw = make_session(name, direction, [0, 1, 4.8, 4.99, 5, 10, 7.01, 7, 7],
+    raw = make_session(name, direction, [0, 1, 4.0, 4.99, 5, 10, 7.01, 7, 7],
                        fill_mode="SCRIPTED", start_offset_seconds=offset)
     for index, side, chunk, qty in ((0, "ENTRY", 0, 4),
                                      (1, "ENTRY", 0, 6), (1, "ENTRY", 1, 1),
@@ -61,7 +61,7 @@ class ProcessRestartTest(unittest.TestCase):
             "0:intent", "0:authorized", "0:before_entry_fill:0",
             "0:entry_committed:0", "0:entry_fill:0",
             "1:entry_fill:1", "1:open", "2:before_market",
-            "3:near_winner", "4:before_market", "5:let_it_ride",
+            "3:profit_protection", "4:before_market", "5:let_it_ride",
             "6:high_water", "8:before_market", "8:exiting",
             "8:exit_committed:0", "8:exit_fill:0", "9:exit_fill:1",
             "9:before_flat", "9:flat")
@@ -82,7 +82,7 @@ class ProcessRestartTest(unittest.TestCase):
         control = self.success(src, self.root / "control.db")
         db = self.root / "repeated.db"
         for label in ("0:intent", "0:authorized", "0:entry_committed:0",
-                      "1:open", "3:near_winner", "5:let_it_ride",
+                      "1:open", "3:profit_protection", "5:let_it_ride",
                       "8:exiting", "8:exit_committed:0", "9:before_flat"):
             self.killed(src, db, label)
         self.assertEqual(self.success(src, db), control)

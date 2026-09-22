@@ -8,7 +8,7 @@ from executor_replay_sessions import make_session
 
 fixtures = json.loads(Path(__file__).with_name("executor_replay_fixtures.json").read_text())
 assert fixtures["version"] == 1
-assert len(fixtures["cases"]) == 12
+assert len(fixtures["cases"]) == 15
 
 for case in fixtures["cases"]:
     for direction in ("CALL", "PUT"):
@@ -43,4 +43,4 @@ for case in fixtures["cases"]:
             assert baseline["exit_fills"] == []
             assert baseline["safety_blocks"][-1]["reason"] == "SESSION_ENDED_OPEN"
 
-print("REPLAY CANONICAL FIXTURES PASS: 12 cases, CALL and PUT mirrored")
+print("REPLAY CANONICAL FIXTURES PASS: 15 cases, CALL and PUT mirrored")

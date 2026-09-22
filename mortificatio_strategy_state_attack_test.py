@@ -200,22 +200,23 @@ print("GAP-THROUGH OBSERVED PRICE PASS")
 
 
 # ============================================================
-# 9. +4.8 peak has a durable one-point reversal exit
+# 9. +4.00 peak has a durable fixed +1.25 floor
 # ============================================================
 
 path = new_db()
 s = DurableStrategyState(path)
 s.activate("CALL", 999, 7700.0)
 
-d = s.process_spx(7704.8)
+d = s.process_spx(7704.0)
 assert d.action == "HOLD"
 assert not s.status().let_it_ride_armed
+assert s.status().profit_protection_armed
 
-d = s.process_spx(7703.81)
+d = s.process_spx(7701.26)
 assert d.action == "HOLD"
-d = s.process_spx(7703.8)
+d = s.process_spx(7701.25)
 assert d.action == "EXIT"
-assert d.reason == "NEAR_WINNER_REVERSAL"
+assert d.reason == "PROFIT_PROTECTION_FLOOR"
 
 s.close()
 os.remove(path)

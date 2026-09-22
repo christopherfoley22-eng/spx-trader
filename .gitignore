@@ -11,3 +11,4 @@ __pycache__/
 *.key
 credentials*
 secrets*
+.executor-local/

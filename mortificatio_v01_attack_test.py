@@ -675,7 +675,7 @@ print("DUPLICATE EXIT WHILE ORDER WORKING BLOCKED PASS")
 
 
 # ============================================================
-# 15. +4.8 near-winner protection
+# 15. +4.00 fixed profit protection
 # ============================================================
 
 directory, lifecycle_db, strategy_db = db_paths()
@@ -696,20 +696,20 @@ plan = engine.authorize_entry(
 
 engine.simulate_entry(plan)
 
-assert engine.process_spx(7704.8)["action"] == "HOLD"
-assert engine.process_spx(7703.81)["action"] == "HOLD"
+assert engine.process_spx(7704.0)["action"] == "HOLD"
+assert engine.process_spx(7701.26)["action"] == "HOLD"
 
-# One-point reversal from the +4.8 peak exits all.
-decision = engine.process_spx(7703.8)
+# The fixed +1.25 favorable floor exits all.
+decision = engine.process_spx(7701.25)
 
 assert decision["action"] == "EXITING"
-assert decision["reason"] == "NEAR_WINNER_REVERSAL"
+assert decision["reason"] == "PROFIT_PROTECTION_FLOOR"
 
 engine.simulate_exit_to_flat()
 
 cleanup(engine, directory)
 
-print("PRE-+5 NEAR-WINNER PROTECTION PASS")
+print("PRE-+5 FIXED PROFIT PROTECTION PASS")
 
 
 # ============================================================

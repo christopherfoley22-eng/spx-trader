@@ -22,6 +22,9 @@ from simulation_evidence import (
 
 NY = ZoneInfo("America/New_York")
 MAX_TRADES = 2
+PROFIT_PROTECTION_ARM = Decimal("4.00")
+PROFIT_PROTECTION_FLOOR = Decimal("1.25")
+LET_IT_RIDE_ARM = Decimal("5.00")
 
 
 class DryRunError(RuntimeError):
@@ -38,6 +41,7 @@ class DryRunStatus:
     trades_today: int
     trading_day: str
     ride: bool
+    profit_protection: bool
     peak: str
     exit_reason: Optional[str]
 
@@ -197,11 +201,18 @@ class DryRunExecutor:
                                   else (entry_value-peak_value))
                 if (not entry_value.is_finite() or not peak_value.is_finite()
                         or entry_value <= 0 or peak_value <= 0 or favorable_peak < 0
-                        or bool(ride) != (favorable_peak >= Decimal("5.00"))):
+                        or bool(ride) != (favorable_peak >= LET_IT_RIDE_ARM)):
                     raise DryRunError("Strategy high-water state corrupted")
+                armed = self.db.execute(
+                    "SELECT detail FROM audit WHERE event_id=? AND kind='PROFIT_PROTECTION_ARMED'",
+                    ("profit:" + intent,)).fetchone()
+                if (favorable_peak >= PROFIT_PROTECTION_ARM) != (armed is not None):
+                    raise DryRunError("Profit-protection state disagrees with durable high-water")
+                if armed is not None and json.loads(armed[0]) != {"floor": "1.25"}:
+                    raise DryRunError("Profit-protection floor audit corrupted")
             except (TypeError, ValueError):
                 raise DryRunError("Strategy price state corrupted")
-            if phase == "EXITING" and reason not in {"INITIAL_STOP", "NEAR_WINNER_REVERSAL",
+            if phase == "EXITING" and reason not in {"INITIAL_STOP", "PROFIT_PROTECTION_FLOOR",
                                                         "LET_IT_RIDE_REVERSAL"}:
                 raise DryRunError("Unknown exit reason")
         return row
@@ -218,9 +229,12 @@ class DryRunExecutor:
             raise DryRunError("Authorized plan corrupted")
 
     def status(self):
-        phase, _, direction, raw, day, count, qty, con_id, _, peak, ride, reason = self._check_state()
+        phase, _, direction, raw, day, count, qty, con_id, entry, peak, ride, reason = self._check_state()
+        protected = (phase in {"OPEN", "EXITING"} and not ride
+                     and ((Decimal(peak) - Decimal(entry)) if direction == "CALL"
+                          else (Decimal(entry) - Decimal(peak))) >= PROFIT_PROTECTION_ARM)
         return DryRunStatus(phase, direction, self._plan(raw)["quantity"] if raw else 0,
-                            qty, con_id, count, day, bool(ride), peak or "0", reason)
+                            qty, con_id, count, day, bool(ride), protected, peak or "0", reason)
 
     def journal(self):
         return self.db.execute("SELECT event_id,kind,detail FROM audit ORDER BY rowid").fetchall()
@@ -498,14 +512,14 @@ class DryRunExecutor:
             previous_peak = Decimal(row[9])
             favorable = (price-entry) if row[2] == "CALL" else (entry-price)
             best = (previous_peak-entry) if row[2] == "CALL" else (entry-previous_peak)
-            prior_best = best
             if favorable > best:
                 best = favorable
                 self.db.execute("UPDATE controller SET peak=? WHERE singleton=1", (str(price),))
                 self._event("peak:" + event_id, "HIGH_WATER", {"favorable": str(best)})
-                if prior_best < Decimal("4.80") <= best < Decimal("5.00"):
-                    self._event("near:" + row[1], "NEAR_WINNER_ARMED", {"peak": str(best)})
-            ride = bool(row[10]) or best >= Decimal("5.00")
+                if best >= PROFIT_PROTECTION_ARM:
+                    self._event("profit:" + row[1], "PROFIT_PROTECTION_ARMED",
+                                {"floor": "1.25"})
+            ride = bool(row[10]) or best >= LET_IT_RIDE_ARM
             if ride and not row[10]:
                 self.db.execute("UPDATE controller SET ride=1 WHERE singleton=1")
                 self._event("ride:" + row[1], "LET_IT_RIDE", {"peak": str(best)})
@@ -514,8 +528,8 @@ class DryRunExecutor:
             if ride:
                 if reversal >= Decimal("3.00"):
                     reason = "LET_IT_RIDE_REVERSAL"
-            elif best >= Decimal("4.80") and reversal >= Decimal("1.00"):
-                reason = "NEAR_WINNER_REVERSAL"
+            elif best >= PROFIT_PROTECTION_ARM and favorable <= PROFIT_PROTECTION_FLOOR:
+                reason = "PROFIT_PROTECTION_FLOOR"
             elif favorable <= Decimal("-3.25"):
                 reason = "INITIAL_STOP"
             if reason:

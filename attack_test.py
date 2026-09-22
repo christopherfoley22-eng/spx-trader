@@ -7,8 +7,8 @@ from strategy_test import trade
 for direction, prices, reason in (
     (Direction.CALL, [7695.0], "INITIAL_STOP"),
     (Direction.PUT, [7705.0], "INITIAL_STOP"),
-    (Direction.CALL, [7704.8, 7703.81, 7703.8], "NEAR_WINNER_REVERSAL"),
-    (Direction.PUT, [7695.2, 7696.19, 7696.2], "NEAR_WINNER_REVERSAL"),
+    (Direction.CALL, [7704.0, 7701.26, 7701.25], "PROFIT_PROTECTION_FLOOR"),
+    (Direction.PUT, [7696.0, 7698.74, 7698.75], "PROFIT_PROTECTION_FLOOR"),
     (Direction.CALL, [7704.8, 7705.0, 7702.01, 7702.0], "LET_IT_RIDE_TRAIL"),
     (Direction.PUT, [7695.2, 7695.0, 7697.99, 7698.0], "LET_IT_RIDE_TRAIL"),
     (Direction.CALL, [7712.4, 7711.4, 7709.4], "LET_IT_RIDE_TRAIL"),

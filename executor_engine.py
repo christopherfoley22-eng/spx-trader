@@ -15,8 +15,8 @@ DAILY_TRADE_LIMIT = 2
 
 INITIAL_STOP = 3.25
 
-NEAR_WINNER_ARM = 4.80
-NEAR_WINNER_REVERSAL = 1.00
+PROFIT_PROTECTION_ARM = 4.00
+PROFIT_PROTECTION_FLOOR = 1.25
 
 LET_IT_RIDE_ARM = 5.00
 LET_IT_RIDE_TRAIL = 3.00
@@ -40,7 +40,7 @@ class EngineState(Enum):
 
 class StrategyState(Enum):
     INITIAL = auto()
-    NEAR_WINNER = auto()
+    PROFIT_PROTECTION = auto()
     LET_IT_RIDE = auto()
 
 
@@ -325,7 +325,7 @@ class Executor:
             p.strategy_state
             in (
                 StrategyState.INITIAL,
-                StrategyState.NEAR_WINNER,
+                StrategyState.PROFIT_PROTECTION,
             )
             and p.max_favorable >= LET_IT_RIDE_ARM
         ):
@@ -339,13 +339,14 @@ class Executor:
 
         elif (
             p.strategy_state == StrategyState.INITIAL
-            and p.max_favorable >= NEAR_WINNER_ARM
+            and p.max_favorable >= PROFIT_PROTECTION_ARM
         ):
-            p.strategy_state = StrategyState.NEAR_WINNER
+            p.strategy_state = StrategyState.PROFIT_PROTECTION
 
             self._log(
-                "NEAR_WINNER_ARMED",
+                "PROFIT_PROTECTION_ARMED",
                 peak=p.max_favorable,
+                floor=PROFIT_PROTECTION_FLOOR,
                 spx=spx,
             )
 
@@ -362,11 +363,11 @@ class Executor:
                     move=move,
                 )
 
-        elif p.strategy_state == StrategyState.NEAR_WINNER:
+        elif p.strategy_state == StrategyState.PROFIT_PROTECTION:
 
-            if p.max_favorable - move >= NEAR_WINNER_REVERSAL:
+            if move <= PROFIT_PROTECTION_FLOOR:
                 return self._begin_exit(
-                    reason="NEAR_WINNER_REVERSAL",
+                    reason="PROFIT_PROTECTION_FLOOR",
                     spx=spx,
                     move=move,
                 )

@@ -21,11 +21,11 @@ if __name__ == "__main__":
         assert decisions[-1]["reason"] == "INITIAL_STOP"
         assert decisions[-1]["quantity"] == 25
     for direction, peak, reversal in (
-        (Direction.CALL, 7704.8, 7703.8),
-        (Direction.PUT, 7695.2, 7696.2),
+        (Direction.CALL, 7704.0, 7701.25),
+        (Direction.PUT, 7696.0, 7698.75),
     ):
         engine, decisions = trade(direction, [peak, reversal])
-        assert decisions[-1]["reason"] == "NEAR_WINNER_REVERSAL"
+        assert decisions[-1]["reason"] == "PROFIT_PROTECTION_FLOOR"
         assert engine.state == EngineState.EXITING
     for direction, peak, hold, exit_price in (
         (Direction.CALL, 7710.0, 7707.01, 7707.0),

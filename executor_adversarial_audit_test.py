@@ -132,19 +132,19 @@ with tempfile.TemporaryDirectory(prefix="executor_audit_") as directory:
     engine.simulate_entry(plan)
     assert engine.lifecycle.status().quantity == 1
     broker.complete = False
-    blocked(lambda: engine.process_spx(7704.8), MortificatioStateError)
+    blocked(lambda: engine.process_spx(7704.0), MortificatioStateError)
     broker.complete = True
     broker.position_qty = 0
     broker.con_id = None
-    blocked(lambda: engine.process_spx(7704.8), MortificatioV01Error)
+    blocked(lambda: engine.process_spx(7704.0), MortificatioV01Error)
     assert engine.strategy.status().best_spx == 7700.0
     broker.position_qty = 1
     broker.con_id = 123
     broker.open_order_count = 1
-    blocked(lambda: engine.process_spx(7704.8), MortificatioV01Error)
+    blocked(lambda: engine.process_spx(7704.0), MortificatioV01Error)
     broker.open_order_count = 0
-    assert engine.process_spx(7704.8)["action"] == "HOLD"
-    assert engine.process_spx(7703.8)["action"] == "EXITING"
+    assert engine.process_spx(7704.0)["action"] == "HOLD"
+    assert engine.process_spx(7701.25)["action"] == "EXITING"
     broker.simulate_exit_fill(123, 1)
     engine.lifecycle.confirm_flat(broker.snapshot())
     engine.close()

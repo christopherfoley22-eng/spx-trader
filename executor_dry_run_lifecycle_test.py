@@ -149,13 +149,53 @@ for direction in ("CALL", "PUT"):
         s.start(1)
         s.fill_entry()
         assert s.tick(4.80) == "OPEN"
+        assert s.engine.status().profit_protection
         assert s.tick(4.90) == "OPEN"
         assert s.tick(4.80) == "OPEN"
         assert s.engine.status().peak == ("5004.9" if direction == "CALL" else "4995.1")
         assert s.tick(3.91) == "OPEN"
-        assert s.tick(3.90) == "EXITING"
-        assert s.engine.status().exit_reason == "NEAR_WINNER_REVERSAL"
+        assert s.tick(3.90) == "OPEN"
+        assert s.tick(1.26) == "OPEN"
+        assert s.tick(1.25) == "EXITING"
+        assert s.engine.status().exit_reason == "PROFIT_PROTECTION_FLOOR"
         s.exit_all()
         s.engine.close()
+
+for direction in ("CALL", "PUT"):
+    with tempfile.TemporaryDirectory() as directory:
+        s = Scenario(directory, direction)
+        s.start(11)
+        s.fill_entry()
+        assert s.tick(3.99) == "OPEN"
+        assert not s.engine.status().profit_protection
+        assert s.tick(1.25) == "OPEN"
+        assert s.tick(4.00) == "OPEN"
+        assert s.engine.status().profit_protection
+        assert s.tick(3.99) == "OPEN"
+        s.restart()
+        assert s.engine.status().profit_protection
+        assert s.tick(1.26) == "OPEN"
+        assert s.tick(1.25) == "EXITING"
+        assert s.engine.status().exit_reason == "PROFIT_PROTECTION_FLOOR"
+        assert s.engine.status().owned == 11
+        event_count = len([kind for _, kind, _ in s.engine.journal()
+                           if kind == "EXIT_TRIGGERED"])
+        assert s.tick(1.25) == "EXITING"
+        assert len([kind for _, kind, _ in s.engine.journal()
+                    if kind == "EXIT_TRIGGERED"]) == event_count == 1
+        assert s.exit_all() == [10, 1]
+        assert s.engine.status().owned == 0
+        s.engine.close()
+
+    for peak in (4.89, 4.99):
+        with tempfile.TemporaryDirectory() as directory:
+            s = Scenario(directory, direction)
+            s.start(1)
+            s.fill_entry()
+            assert s.tick(peak) == "OPEN"
+            assert s.tick(1.25) == "EXITING"
+            assert s.engine.status().exit_reason == "PROFIT_PROTECTION_FLOOR"
+            s.exit_all()
+            s.engine.close()
 
 print("COMPLETE VERIFIED DRY-RUN CALL/PUT LIFECYCLE PASS")

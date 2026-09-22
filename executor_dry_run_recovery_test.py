@@ -73,8 +73,9 @@ with tempfile.TemporaryDirectory() as directory:
     blocked(lambda: s.engine.observe("tick-1", replace(s.spx(5004.80),
                     status=FeedStatus.FROZEN), s.broker(), s.wall, s.mono))
     s.restart()  # immediately before exit trigger
-    assert s.tick(3.80) == "EXITING"
-    assert s.engine.status().exit_reason == "NEAR_WINNER_REVERSAL"
+    assert s.tick(3.80) == "OPEN"
+    assert s.tick(1.25) == "EXITING"
+    assert s.engine.status().exit_reason == "PROFIT_PROTECTION_FLOOR"
     assert s.engine.status().owned == 13
     s.restart()  # immediately after EXITING begins
     assert s.engine.press("blocked-during-exit", "PUT", s.broker(),

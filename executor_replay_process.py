@@ -203,6 +203,9 @@ class DurableReplayRunner:
         if status.ride and self._journal_event("ride:" + self.intent_id,
                                                "LET_IT_RIDE") is None:
             raise ReplayRecoveryError("LET_IT_RIDE state lacks journal evidence")
+        if status.profit_protection and self._journal_event(
+                "profit:" + self.intent_id, "PROFIT_PROTECTION_ARMED") is None:
+            raise ReplayRecoveryError("Profit protection lacks durable arm evidence")
         if status.phase == "FLAT" and self._journal_event(
                 "intent:" + self.intent_id, "INTENT_ACCEPTED") is not None:
             completed = any(x[0] == self.intent_id for x in self.controller.completed_trades())
@@ -349,9 +352,9 @@ class DurableReplayRunner:
                 after = self.controller.status()
                 if after.peak != before.peak:
                     self.checkpoint("{}:high_water".format(seq))
-                if self._journal_event("near:" + self.intent_id, "NEAR_WINNER_ARMED"):
-                    if before.peak != after.peak:
-                        self.checkpoint("{}:near_winner".format(seq))
+                if self._journal_event("profit:" + self.intent_id, "PROFIT_PROTECTION_ARMED"):
+                    if not before.profit_protection and after.profit_protection:
+                        self.checkpoint("{}:profit_protection".format(seq))
                 if after.ride and not before.ride:
                     self.checkpoint("{}:let_it_ride".format(seq))
                 if after.phase == "EXITING" and before.phase == "OPEN":
@@ -386,13 +389,18 @@ class DurableReplayRunner:
             if self._journal_event(fill["event_id"], expected) is None:
                 raise ReplayRecoveryError("Scripted fill was not applied")
 
-    def run(self, start_index=None):
+    def run(self, start_index=None, stop_index=None):
         cursor = self._verify_progress()
         if start_index is None:
             start_index = cursor + 1
         if not isinstance(start_index, int) or start_index < 0 or start_index > cursor + 1:
             raise ReplayRecoveryError("Replay attempted to skip an unprocessed event")
-        for index in range(start_index, len(self.session.events)):
+        if stop_index is None:
+            stop_index = len(self.session.events) - 1
+        if (not isinstance(stop_index, int) or isinstance(stop_index, bool)
+                or not cursor <= stop_index < len(self.session.events)):
+            raise ReplayRecoveryError("Replay stop point invalid")
+        for index in range(start_index, stop_index + 1):
             if index <= cursor:
                 # Exact re-delivery after restart is a no-op by durable cursor.
                 continue

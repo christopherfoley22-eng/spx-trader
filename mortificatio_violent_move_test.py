@@ -8,8 +8,8 @@ from mortificatio_strategy_state import DurableStrategyState
 cases = (
     ("CALL", [7695.0], "INITIAL_STOP"),
     ("PUT", [7705.0], "INITIAL_STOP"),
-    ("CALL", [7704.8, 7702.0], "NEAR_WINNER_REVERSAL"),
-    ("PUT", [7695.2, 7698.0], "NEAR_WINNER_REVERSAL"),
+    ("CALL", [7704.0, 7701.0], "PROFIT_PROTECTION_FLOOR"),
+    ("PUT", [7696.0, 7699.0], "PROFIT_PROTECTION_FLOOR"),
     ("CALL", [7712.0, 7708.0], "LET_IT_RIDE_REVERSAL"),
     ("PUT", [7688.0, 7692.0], "LET_IT_RIDE_REVERSAL"),
 )

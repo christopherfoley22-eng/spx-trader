@@ -6,8 +6,8 @@ from mortificatio_strategy_state import DurableStrategyState
 
 
 for direction, arm, hold, exit_price in (
-    ("CALL", 7704.8, 7703.81, 7703.8),
-    ("PUT", 7695.2, 7696.19, 7696.2),
+    ("CALL", 7704.0, 7701.26, 7701.25),
+    ("PUT", 7696.0, 7698.74, 7698.75),
 ):
     fd, path = tempfile.mkstemp(prefix="pre_target_", suffix=".db")
     os.close(fd)
@@ -16,12 +16,14 @@ for direction, arm, hold, exit_price in (
         state = DurableStrategyState(path)
         state.activate(direction, 123, 7700.0)
         assert state.process_spx(arm).action == "HOLD"
+        assert state.status().profit_protection_armed
         state.close()
         state = DurableStrategyState(path)
+        assert state.status().profit_protection_armed
         assert state.process_spx(hold).action == "HOLD"
         decision = state.process_spx(exit_price)
         assert decision.action == "EXIT"
-        assert decision.reason == "NEAR_WINNER_REVERSAL"
+        assert decision.reason == "PROFIT_PROTECTION_FLOOR"
         state.close()
         state = DurableStrategyState(path)
         assert state.status().exit_required

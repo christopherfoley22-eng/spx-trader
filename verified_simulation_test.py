@@ -150,7 +150,7 @@ with tempfile.TemporaryDirectory() as directory:
                                   lambda _: True))
     next_time = now + timedelta(milliseconds=100)
     next_mono = mono + 0.1
-    next_spx = replace(spx, price=7704.8, source_time=next_time,
+    next_spx = replace(spx, price=7704.0, source_time=next_time,
                        received_monotonic=next_mono)
     next_option = replace(option, source_time=next_time,
                           received_monotonic=next_mono)
@@ -164,13 +164,13 @@ with tempfile.TemporaryDirectory() as directory:
         spx, option, opened, now, mono))
     risk_time = now + timedelta(milliseconds=200)
     risk_mono = mono + 0.2
-    risk_spx = replace(spx, price=7703.8, source_time=risk_time,
+    risk_spx = replace(spx, price=7701.25, source_time=risk_time,
                        received_monotonic=risk_mono)
     decision = restarted_again.process_spx_risk(
         risk_spx, replace(opened, received_monotonic=risk_mono),
         risk_time, risk_mono)
     assert decision["action"] == "EXITING"
-    assert decision["reason"] == "NEAR_WINNER_REVERSAL"
+    assert decision["reason"] == "PROFIT_PROTECTION_FLOOR"
     restarted_again.close()
 
 print("VERIFIED SYNTHETIC CONTRACT, MARKET AND ACCOUNT TESTS PASS")

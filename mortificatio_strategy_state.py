@@ -21,8 +21,8 @@ CALL = "CALL"
 PUT = "PUT"
 
 INITIAL_STOP_POINTS = 3.25
-NEAR_WINNER_ARM_POINTS = 4.80
-NEAR_WINNER_REVERSAL_POINTS = 1.00
+PROFIT_PROTECTION_ARM_POINTS = 4.00
+PROFIT_PROTECTION_FLOOR_POINTS = 1.25
 LET_IT_RIDE_ARM_POINTS = 5.00
 TRAIL_REVERSAL_POINTS = 3.00
 
@@ -39,6 +39,7 @@ class StrategySnapshot:
     direction: Optional[str]
     con_id: Optional[int]
     entry_spx: Optional[float]
+    profit_protection_armed: bool
     let_it_ride_armed: bool
     best_spx: Optional[float]
     exit_required: bool
@@ -81,6 +82,7 @@ class DurableStrategyState:
                 direction TEXT,
                 con_id INTEGER,
                 entry_spx REAL,
+                profit_protection_armed INTEGER NOT NULL DEFAULT 0,
                 let_it_ride_armed INTEGER NOT NULL,
                 best_spx REAL,
                 exit_required INTEGER NOT NULL,
@@ -89,6 +91,12 @@ class DurableStrategyState:
             )
             """
         )
+
+        fields = {row[1] for row in self.conn.execute(
+            "PRAGMA table_info(mortificatio_strategy_state)")}
+        if "profit_protection_armed" not in fields:
+            self.conn.execute(
+                "ALTER TABLE mortificatio_strategy_state ADD COLUMN profit_protection_armed INTEGER NOT NULL DEFAULT 0")
 
         self.conn.execute(
             """
@@ -121,13 +129,14 @@ class DurableStrategyState:
                 direction,
                 con_id,
                 entry_spx,
+                profit_protection_armed,
                 let_it_ride_armed,
                 best_spx,
                 exit_required,
                 exit_reason,
                 updated_at
             )
-            VALUES (1, 0, NULL, NULL, NULL, 0, NULL, 0, NULL, ?)
+            VALUES (1, 0, NULL, NULL, NULL, 0, 0, NULL, 0, NULL, ?)
             """,
             (self._now(),),
         )
@@ -153,6 +162,7 @@ class DurableStrategyState:
                 direction,
                 con_id,
                 entry_spx,
+                profit_protection_armed,
                 let_it_ride_armed,
                 best_spx,
                 exit_required,
@@ -165,7 +175,8 @@ class DurableStrategyState:
         if row is None:
             raise StrategyStateError("Strategy state missing")
 
-        if row[0] not in (0, 1) or row[4] not in (0, 1) or row[6] not in (0, 1):
+        if (row[0] not in (0, 1) or row[4] not in (0, 1)
+                or row[5] not in (0, 1) or row[7] not in (0, 1)):
             raise StrategyStateError("Strategy flags corrupted")
 
         snapshot = StrategySnapshot(
@@ -173,10 +184,11 @@ class DurableStrategyState:
             direction=row[1],
             con_id=row[2],
             entry_spx=row[3],
-            let_it_ride_armed=bool(row[4]),
-            best_spx=row[5],
-            exit_required=bool(row[6]),
-            exit_reason=row[7],
+            profit_protection_armed=bool(row[4]),
+            let_it_ride_armed=bool(row[5]),
+            best_spx=row[6],
+            exit_required=bool(row[7]),
+            exit_reason=row[8],
         )
 
         if not snapshot.active:
@@ -184,6 +196,7 @@ class DurableStrategyState:
                 snapshot.direction is not None
                 or snapshot.con_id is not None
                 or snapshot.entry_spx is not None
+                or snapshot.profit_protection_armed
                 or snapshot.let_it_ride_armed
                 or snapshot.best_spx is not None
                 or snapshot.exit_required
@@ -228,19 +241,13 @@ class DurableStrategyState:
                     "PUT best SPX cannot be above entry"
                 )
 
-        if snapshot.let_it_ride_armed:
-            best_favorable = self._favorable_points(
-                snapshot.direction,
-                snapshot.entry_spx,
-                snapshot.best_spx,
-            )
-            if best_favorable < LET_IT_RIDE_ARM_POINTS:
-                raise StrategyStateError(
-                    "Let It Ride armed without persisted +5"
-                )
-        elif self._favorable_points(
-            snapshot.direction, snapshot.entry_spx, snapshot.best_spx
-        ) >= LET_IT_RIDE_ARM_POINTS:
+        best_favorable = self._favorable_points(
+            snapshot.direction, snapshot.entry_spx, snapshot.best_spx)
+        if snapshot.profit_protection_armed != (best_favorable >= PROFIT_PROTECTION_ARM_POINTS):
+            raise StrategyStateError("Profit protection disagrees with persisted high-water")
+        if snapshot.let_it_ride_armed and best_favorable < LET_IT_RIDE_ARM_POINTS:
+            raise StrategyStateError("Let It Ride armed without persisted +5")
+        if not snapshot.let_it_ride_armed and best_favorable >= LET_IT_RIDE_ARM_POINTS:
             raise StrategyStateError("Persisted +5 without Let It Ride state")
 
         if snapshot.exit_required and snapshot.exit_reason is None:
@@ -300,6 +307,7 @@ class DurableStrategyState:
                     direction = ?,
                     con_id = ?,
                     entry_spx = ?,
+                    profit_protection_armed = 0,
                     let_it_ride_armed = 0,
                     best_spx = ?,
                     exit_required = 0,
@@ -387,6 +395,10 @@ class DurableStrategyState:
                 new_best,
             )
 
+            profit_armed = (
+                current.profit_protection_armed
+                or best_favorable >= PROFIT_PROTECTION_ARM_POINTS
+            )
             armed = (
                 current.let_it_ride_armed
                 or best_favorable >= LET_IT_RIDE_ARM_POINTS
@@ -400,16 +412,13 @@ class DurableStrategyState:
             exit_required = False
             exit_reason = None
 
-            # Before +5, protect a peak of at least +4.80 with a
-            # one-point reversal. +5 takes precedence permanently.
+            # Before +5, +4 permanently establishes a fixed +1.25 floor.
+            # +5 takes precedence permanently.
             if not armed:
-                if (
-                    best_favorable >= NEAR_WINNER_ARM_POINTS
-                    and reversal >= NEAR_WINNER_REVERSAL_POINTS
-                ):
+                if profit_armed and favorable <= PROFIT_PROTECTION_FLOOR_POINTS:
                     exit_required = True
-                    exit_reason = "NEAR_WINNER_REVERSAL"
-                elif favorable <= -INITIAL_STOP_POINTS:
+                    exit_reason = "PROFIT_PROTECTION_FLOOR"
+                elif not profit_armed and favorable <= -INITIAL_STOP_POINTS:
                     exit_required = True
                     exit_reason = "INITIAL_STOP"
 
@@ -423,6 +432,7 @@ class DurableStrategyState:
 
             changed = (
                 new_best != current.best_spx
+                or profit_armed != current.profit_protection_armed
                 or armed != current.let_it_ride_armed
                 or exit_required
             )
@@ -432,6 +442,7 @@ class DurableStrategyState:
                     """
                     UPDATE mortificatio_strategy_state
                     SET
+                        profit_protection_armed = ?,
                         let_it_ride_armed = ?,
                         best_spx = ?,
                         exit_required = ?,
@@ -440,6 +451,7 @@ class DurableStrategyState:
                     WHERE singleton = 1
                     """,
                     (
+                        1 if profit_armed else 0,
                         1 if armed else 0,
                         float(new_best),
                         1 if exit_required else 0,
@@ -447,6 +459,12 @@ class DurableStrategyState:
                         self._now(),
                     ),
                 )
+
+                if profit_armed and not current.profit_protection_armed:
+                    self._journal(
+                        "PROFIT_PROTECTION_ARMED",
+                        "fixed_favorable_floor_points=1.25",
+                    )
 
                 if (
                     armed
@@ -523,6 +541,7 @@ class DurableStrategyState:
                     direction = NULL,
                     con_id = NULL,
                     entry_spx = NULL,
+                    profit_protection_armed = 0,
                     let_it_ride_armed = 0,
                     best_spx = NULL,
                     exit_required = 0,

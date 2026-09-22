@@ -535,7 +535,7 @@ class ReplayRunner:
                 high_water = [json.loads(detail)["favorable"] for eid, kind, detail in journal
                               if kind == "HIGH_WATER" and eid.startswith("peak:" + intent_id + ":")]
                 strategy_events = [kind for eid, kind, _ in journal
-                                   if kind in {"NEAR_WINNER_ARMED", "LET_IT_RIDE", "EXIT_TRIGGERED"}
+                                   if kind in {"PROFIT_PROTECTION_ARMED", "LET_IT_RIDE", "EXIT_TRIGGERED"}
                                    and eid.endswith(intent_id)]
                 selected = plan["contract"] if plan else None
                 digest = hashlib.sha256(json.dumps(journal, sort_keys=True,

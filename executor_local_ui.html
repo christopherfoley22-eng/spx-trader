@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="__CSRF_TOKEN__">
+  <title>Executor · Simulation</title>
+  <style>
+    :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0b111b;color:#eef3fb}
+    *{box-sizing:border-box}body{margin:0}main{max-width:560px;margin:auto;padding:20px 16px 48px}
+    .banner{background:#f8c356;color:#1f1b12;text-align:center;font-weight:900;letter-spacing:.08em;padding:10px}
+    header{display:flex;justify-content:space-between;align-items:start;margin:24px 0}h1{font-size:1.5rem;margin:0}small,.muted{color:#9aabc2}
+    .panel{background:#162232;border:1px solid #2c3d52;border-radius:18px;padding:18px;margin:16px 0}
+    .state{font-size:1.65rem;font-weight:800;margin:8px 0}.reason{color:#f5c781;min-height:1.3em}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:22px 0}
+    button{border:0;border-radius:16px;padding:20px 8px;font-family:inherit;font-size:1.35rem;font-weight:800;cursor:pointer;color:white;min-height:64px}
+    button:disabled{opacity:.36;cursor:not-allowed}.call{background:#147d5a}.put{background:#a64553}
+    dl{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0}dt{color:#9aabc2;font-size:.85rem}dd{margin:4px 0 0;font-weight:700}
+    h2{font-size:1rem;margin:0 0 14px}ol{padding-left:20px;margin:0}li{margin:8px 0;color:#c2d0e2;font-size:.9rem}
+    .dev{border-top:1px solid #34445a;margin-top:32px;padding-top:22px}.dev button{background:#304662;font-size:.95rem;min-height:42px;padding:10px 14px;margin:4px 4px 4px 0}
+    select{background:#21344b;color:white;border:1px solid #4e6683;border-radius:8px;padding:10px;width:100%;font-size:1rem}
+    .error{color:#ff9b9b;min-height:1.2em}
+  </style>
+</head>
+<body>
+  <div class="banner">DRY RUN / SIMULATION · NO REAL ORDERS</div>
+  <main>
+    <header><div><h1>Executor</h1><small>Local synthetic session</small></div><div id="count">0/2 trades</div></header>
+    <section class="panel" aria-live="polite"><div class="muted">Executor status</div><div class="state" id="state">Loading…</div><div class="reason" id="reason"></div><div class="muted" id="lifecycle"></div></section>
+    <div class="actions"><button class="call" id="calls" disabled>CALLS</button><button class="put" id="puts" disabled>PUTS</button></div>
+    <section class="panel" id="position-panel" hidden><h2>Simulated position</h2><dl id="position"></dl></section>
+    <section class="panel"><h2>Recent activity</h2><ol id="activity"></ol></section>
+    <section class="dev"><h2>Development replay controls</h2><p class="muted">Synthetic fixtures only. These controls advance market observations; Executor decides every exit.</p>
+      <select id="fixture" aria-label="Canonical synthetic fixture" disabled></select>
+      <div><button id="load" disabled>Load fixture</button><button id="advance" disabled>Advance one</button><span class="run-slot"><button id="run" disabled>Run remaining</button><button id="queue-run" hidden>Run remaining</button></span></div>
+      <p class="muted" id="progress" aria-live="polite"></p>
+    </section>
+    <p class="error" id="error" role="alert"></p>
+  </main>
+  <script>
+    const csrf=document.querySelector('meta[name="csrf-token"]').content;
+    const ids=id=>document.getElementById(id);
+    let pending=0, queue=Promise.resolve(), lastStatus=null, fetchVersion=0;
+    let intentPending=false, runQueued=false;
+    const controls=['calls','puts','load','advance','run','fixture'];
+    function disableControls(){for(const name of controls)ids(name).disabled=true}
+    function runControls(){
+      ids('run').hidden=intentPending;
+      ids('queue-run').hidden=!intentPending;
+      ids('queue-run').disabled=!intentPending||runQueued;
+    }
+    function processing(){disableControls();runControls();ids('state').textContent='Processing…';ids('reason').textContent='Waiting for the dry-run service';}
+    async function api(path,body){
+      const response=await fetch(path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)});
+      const data=await response.json();if(!response.ok){const error=Error(data.error||'Request blocked');error.code=data.code;error.retryable=data.retryable;throw error}return data;
+    }
+    function render(s){
+      ids('state').textContent=pending?'Processing…':s.state;
+      ids('reason').textContent=pending?'Waiting for the dry-run service':(s.reason||'');
+      ids('lifecycle').textContent='Lifecycle: '+s.lifecycle;
+      ids('count').textContent=(s.trade_count===null?'?':s.trade_count)+'/2 trades';
+      ids('calls').disabled=ids('puts').disabled=pending>0||!s.ready;
+      ids('load').disabled=ids('fixture').disabled=pending>0||s.lifecycle!=='FLAT';
+      const canAdvance=pending===0&&s.replay_index!==null&&s.replay_index<s.replay_total-1;
+      ids('advance').disabled=ids('run').disabled=!canAdvance;
+      runControls();
+      const p=s.position;ids('position-panel').hidden=!p;
+      ids('position').replaceChildren();
+      if(p){for(const [label,value] of Object.entries({Direction:p.direction,Quantity:p.quantity,Strike:p.strike,'Simulated entry ask':p.simulated_entry_ask,'Entry SPX':p.entry_spx,'High-water SPX':p.high_water_spx,'Maximum favorable points':p.maximum_favorable_points,Strategy:p.strategy,'Fixed profit floor':p.fixed_profit_floor_points===null?'—':p.fixed_profit_floor_points+' points','Exit reason':p.exit_reason||'—'})){
+        const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;ids('position').append(dt,dd);
+      }}
+      ids('activity').replaceChildren();for(const item of s.activity){const li=document.createElement('li');li.textContent=item.type+' '+Object.entries(item.detail).map(([k,v])=>k+': '+v).join(' · ');ids('activity').append(li)}
+      const select=ids('fixture'),current=select.value;select.replaceChildren();for(const name of s.fixtures){const option=document.createElement('option');option.value=name;option.textContent=name.replaceAll('_',' ');select.append(option)}select.value=current&&s.fixtures.includes(current)?current:s.fixture;
+      ids('progress').textContent=runQueued?'Run remaining queued until the intent and status check finish':s.development_status||
+        (s.replay_index===null?'No active replay':'Observation '+(s.replay_index+1)+' / '+s.replay_total);
+    }
+    async function refresh(){
+      const version=++fetchVersion;
+      try{const r=await fetch('/api/status',{cache:'no-store'});if(!r.ok)throw Error();const status=await r.json();
+        if(version!==fetchVersion)return false;
+        lastStatus=status;render(status);return true;
+      }catch{if(version===fetchVersion){disableControls();ids('state').textContent='Status unavailable';ids('error').textContent='Local service unavailable'}return false}
+    }
+    function act(path,body){
+      pending++;fetchVersion++;processing();
+      const task=queue.then(async()=>{
+        ids('error').textContent='';let ok=false;
+        try{await api(path,body);ok=true}
+        catch(e){ids('error').textContent=e.retryable?e.message+' — retry this control after the pending action completes':e.message}
+        finally{
+          let fresh=await refresh();if(!fresh)fresh=await refresh();pending--;
+          if(pending){processing()}
+          else if(fresh&&lastStatus){render(lastStatus)}
+          else{processing();fresh=await refresh();if(!fresh)disableControls()}
+          return {ok,status:fresh?lastStatus:null};
+        }
+      });
+      queue=task.catch(()=>{});return task;
+    }
+    function queueRun(){
+      if(!intentPending||runQueued)return;
+      runQueued=true;runControls();
+      ids('progress').textContent='Run remaining queued until the intent and status check finish';
+    }
+    function hasActiveReplay(s){return s&&['ENTERING','OPEN','EXITING'].includes(s.lifecycle)
+      &&Number.isInteger(s.replay_index)&&Number.isInteger(s.replay_total)
+      &&s.replay_index<s.replay_total-1}
+    async function intent(direction){
+      if(intentPending||pending)return;
+      intentPending=true;runQueued=false;
+      const outcome=await act('/api/intent',{direction,request_id:crypto.randomUUID()});
+      intentPending=false;
+      if(runQueued){
+        runQueued=false;
+        if(outcome.ok&&hasActiveReplay(outcome.status)){
+          processing();
+          await act('/api/demo/run',{});
+        }else{
+          const prior=ids('error').textContent;
+          ids('error').textContent=(prior?prior+' · ':'')+
+            'Queued Run was not sent: no verified active replay after the intent. Check status and retry.';
+        }
+      }
+      if(lastStatus)render(lastStatus);
+    }
+    ids('calls').onclick=()=>intent('CALL');ids('puts').onclick=()=>intent('PUT');
+    ids('load').onclick=()=>act('/api/demo/load',{fixture:ids('fixture').value});
+    ids('advance').onclick=()=>act('/api/demo/advance',{});
+    ids('run').onclick=()=>intentPending?queueRun():act('/api/demo/run',{});
+    ids('queue-run').onclick=queueRun;
+    refresh();setInterval(refresh,2000);
+  </script>
+</body>
+</html>

@@ -8,8 +8,8 @@ MAX_CHUNK = 5
 DAILY_LIMIT = 2
 
 INITIAL_STOP = 3.25
-NEAR_WINNER_ARM = 4.80
-NEAR_WINNER_REVERSAL = 1.00
+PROFIT_PROTECTION_ARM = 4.00
+PROFIT_PROTECTION_FLOOR = 1.25
 LET_IT_RIDE_ARM = 5.00
 LET_IT_RIDE_TRAIL = 3.00
 
@@ -29,7 +29,7 @@ class Direction(Enum):
 
 class Strategy(Enum):
     INITIAL = "INITIAL"
-    NEAR_WINNER = "NEAR_WINNER"
+    PROFIT_PROTECTION = "PROFIT_PROTECTION"
     LET_IT_RIDE = "LET_IT_RIDE"
 
 
@@ -269,16 +269,16 @@ class Executor:
 
         elif (
             self.strategy == Strategy.INITIAL
-            and self.max_favorable >= NEAR_WINNER_ARM
+            and self.max_favorable >= PROFIT_PROTECTION_ARM
         ):
-            self.strategy = Strategy.NEAR_WINNER
+            self.strategy = Strategy.PROFIT_PROTECTION
 
-        # NEAR-WINNER FLOOR
+        # Fixed profit floor before +5.
         if (
-            self.strategy == Strategy.NEAR_WINNER
-            and self.max_favorable - move >= NEAR_WINNER_REVERSAL
+            self.strategy == Strategy.PROFIT_PROTECTION
+            and move <= PROFIT_PROTECTION_FLOOR
         ):
-            self.begin_exit("NEAR_WINNER_REVERSAL")
+            self.begin_exit("PROFIT_PROTECTION_FLOOR")
             return "EXIT"
 
         # LET IT RIDE
@@ -411,24 +411,24 @@ expect(e.trades_today == 1, "Partial fills double-counted trade")
 print("3. COMPLETE ENTRY -> OWN EXACTLY 25: PASS")
 
 
-# +4.8 arms near-winner.
-result = e.update_spx(6704.8)
+# +4.00 arms the fixed profit floor.
+result = e.update_spx(6704.0)
 
 expect(result == "HOLD", result)
 expect(
-    e.strategy == Strategy.NEAR_WINNER,
-    "Near-winner not armed",
+    e.strategy == Strategy.PROFIT_PROTECTION,
+    "Profit protection not armed",
 )
 
-print("4. +4.8 ARMS NEAR-WINNER PROTECTION: PASS")
+print("4. +4.00 ARMS FIXED PROFIT PROTECTION: PASS")
 
 
-# Pull back, but still above +1.
-result = e.update_spx(6703.81)
+# Pull back, but still above +1.25.
+result = e.update_spx(6701.26)
 
 expect(result == "HOLD", result)
 
-print("5. LESS THAN ONE-POINT REVERSAL HOLDS: PASS")
+print("5. FIXED FLOOR +1.26 HOLDS: PASS")
 
 
 # Recover to +5: Let It Ride.
