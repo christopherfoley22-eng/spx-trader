@@ -37,6 +37,19 @@ for node in ast.walk(bridge_tree):
     if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
             and isinstance(node.func.value, ast.Name) and node.func.value.id == "app"):
         assert node.func.attr in allowed_bridge_calls, ("Unexpected TWS bridge API", node.func.attr)
+diagnostic_tree = ast.parse((root / "ibkr_option_market_diagnostic.py").read_text())
+allowed_diagnostic_calls = {
+    "connect", "reqContractDetails", "reqSecDefOptParams",
+    "reqMarketDataType", "reqMktData", "cancelMktData",
+    "disconnect", "isConnected", "safe_error_events",
+}
+for node in ast.walk(diagnostic_tree):
+    if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name) and node.func.value.id == "app"):
+        assert node.func.attr in allowed_diagnostic_calls, ("Unexpected diagnostic TWS API", node.func.attr)
+for name in ("executor_dry_run.py", "executor_local_service.py",
+             "executor_local_web.py", "executor_ibkr_observation.py"):
+    assert "ibkr_option_market_diagnostic" not in (root / name).read_text(), name
 for path in root.glob("*.py"):
     tree = ast.parse(path.read_text(), filename=str(path))
     if path.name in {"executor_ibkr_observation.py", "executor_live_observation_service.py"}:
