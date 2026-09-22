@@ -71,9 +71,10 @@ a, g = seeded()
 identity(a, g)
 market(a, g)
 r = view(a)
-assert r.state == "READ-ONLY CONNECTED" and not r.reasons and not r.executable
+assert r.state == "READ-ONLY CONNECTED" and not r.executable
+assert "AUTHORITATIVE MARKET INGESTION REDUCER REQUIRED" in r.reasons
 assert r.account.complete and r.broker.complete and r.broker.position_qty == 0
-assert r.order_scope == "API_VISIBLE_ONLY" and r.option.quote_con_id == CONTRACT.con_id
+assert r.order_scope == "API_VISIBLE_ONLY" and r.option is None and r.spx is None
 assert LocalReadOnlyObservationService(a).status()["ready"] is False
 
 assert ReadOnlyIBKREvidenceAdapter().observe(NOW, 100.1).state == "DISCONNECTED"

@@ -250,6 +250,7 @@ class ReadOnlyIBKREvidenceAdapter:
 
     def market_tick(self, generation, instrument, field, value, source_time, received,
                     con_id=None):
+        """Legacy diagnostic capture only; never authoritative for readiness."""
         with self.lock:
             self._current(generation)
             if instrument not in self.market or field not in ({"price"} if instrument == "SPX" else {"bid", "ask"}):
@@ -342,22 +343,10 @@ class ReadOnlyIBKREvidenceAdapter:
                 slot = self.market[instrument]
                 if slot.get("type") != 1:
                     reasons.append(instrument + " MARKET DATA " + MARKET_TYPES.get(slot.get("type"), "UNAVAILABLE"))
-            try:
-                raw_spx = self.market["SPX"].get("price")
-                raw_bid = self.market["OPTION"].get("bid")
-                raw_ask = self.market["OPTION"].get("ask")
-                if not raw_spx or not raw_bid or not raw_ask or contract is None:
-                    raise EvidenceError("Market evidence missing")
-                if raw_bid[1] != raw_ask[1] or abs(raw_bid[2] - raw_ask[2]) > .25:
-                    raise EvidenceError("Option sides not synchronized")
-                spx = SPXObservation(float(raw_spx[0]), FeedStatus.LIVE, raw_spx[1], raw_spx[2])
-                option = OptionObservation(contract, self.market["OPTION"].get("con_id"),
-                                           float(raw_bid[0]), float(raw_ask[0]), FeedStatus.LIVE,
-                                           raw_bid[1], max(raw_bid[2], raw_ask[2]))
-                self.clock.validate_pair(direction, spx, option, now_wall, now_monotonic,
-                                         lambda t: any(t.strftime("%Y%m%d") in exps and contract.strike in strikes
-                                                       for _, exps, strikes in self.chains))
-            except EvidenceError:
-                reasons.append("MARKET DATA UNAVAILABLE OR STALE")
+            # This adapter predates source-proven callback ingestion. Its caller-
+            # supplied datetimes cannot authorize readiness. All future market
+            # readiness must come from executor_market_ingestion.
+            reasons.extend(("MARKET DATA UNAVAILABLE OR STALE",
+                            "AUTHORITATIVE MARKET INGESTION REDUCER REQUIRED"))
             return ObservationResult("READ-ONLY CONNECTED", tuple(dict.fromkeys(reasons)),
                                      account, broker, spx, option, contract)

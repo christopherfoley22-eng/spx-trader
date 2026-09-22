@@ -2,8 +2,6 @@
 
 import math
 import os
-import json
-import re
 import secrets
 import threading
 import time
@@ -14,6 +12,8 @@ from zoneinfo import ZoneInfo
 from ibapi.client import EClient
 from ibapi.contract import Contract
 from ibapi.wrapper import EWrapper
+
+from executor_redaction import safe_error_text as _safe_error_text
 
 from simulation_evidence import (
     EvidenceError, VerifiedAccountSnapshot, VerifiedBrokerSnapshot,
@@ -42,38 +42,6 @@ REQUEST_LABELS = {
     8204: "DELAYED_SPX_DIAGNOSTIC_MARKET_DATA",
     8206: "EXACT_SPXW_OPTION_LIVE_DIAGNOSTIC_MARKET_DATA",
 }
-
-
-def _safe_error_text(value):
-    """Keep diagnostic wording while removing likely runtime identities/values."""
-    if not isinstance(value, str):
-        return "[NON_TEXT_ERROR]"
-    if value.lstrip().startswith(("{", "[")):
-        try:
-            parsed = json.loads(value)
-        except (ValueError, TypeError):
-            pass
-        else:
-            def scrub(item):
-                if isinstance(item, dict):
-                    return {key: "[REDACTED]" if re.search(
-                        r"(?i)account|user|token|password|credential|balance|cash|fund|price|amount|margin|equity|conid",
-                        str(key)) else scrub(entry)
-                        for key, entry in item.items()}
-                if isinstance(item, list):
-                    return [scrub(entry) for entry in item]
-                return item
-            value = json.dumps(scrub(parsed), ensure_ascii=True, separators=(",", ":"))
-    text = value.replace("\r", " ").replace("\n", " ").replace("\x00", " ")
-    text = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL]", text)
-    text = re.sub(r"(?i)\b(?:DU|U|D|F)\d{5,}\b", "[ACCOUNT_ID]", text)
-    text = re.sub(r"\b\d{6,}\b", "[IDENTIFIER]", text)
-    text = re.sub(r"(?i)\b(account|username|user|token|password|credential)\s*[:=]\s*[^\s,;{}]+",
-                  lambda match: match.group(1) + "=[REDACTED]", text)
-    text = re.sub(r"(?i)\b(balance|cash|funds|buying power|price|amount|margin|equity)\s*[:=]\s*[$€£]?[+-]?\d[\d,.]*",
-                  lambda match: match.group(1) + "=[REDACTED]", text)
-    text = re.sub(r"[$€£]\s*[+-]?\d[\d,.]*", "[FINANCIAL_VALUE]", text)
-    return text
 
 
 class ReadOnlyProbe(EWrapper, EClient):
