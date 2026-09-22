@@ -8,6 +8,12 @@ _SENSITIVE_KEY = re.compile(
     r"(?i)account|user|token|password|secret|credential|balance|cash|fund|"
     r"price|amount|margin|equity|conid"
 )
+_OCC_OPTION_SYMBOL = re.compile(r"(?i)\b[A-Z]{1,6}\s*\d{6}[CP]\d{8}\b")
+_HUMAN_OPTION_DESCRIPTION = re.compile(
+    r"(?i)\b[A-Z]{1,6}\s*(?:\([A-Z0-9]+\)\s*)?"
+    r"(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+"
+    r"\d{1,2}\s+'?\d{2,4}\s+\d+(?:\.\d+)?\s+(?:CALL|PUT)\b"
+)
 
 
 def safe_error_text(value):
@@ -29,6 +35,8 @@ def safe_error_text(value):
                 return item
             value = json.dumps(scrub(parsed), ensure_ascii=True, separators=(",", ":"))
     text = value.replace("\r", " ").replace("\n", " ").replace("\x00", " ")
+    text = _OCC_OPTION_SYMBOL.sub("[REDACTED_OPTION_CONTRACT]", text)
+    text = _HUMAN_OPTION_DESCRIPTION.sub("[REDACTED_OPTION_CONTRACT]", text)
     text = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b",
                   "[EMAIL]", text)
     text = re.sub(r"(?i)\b(?:DU|U|D|F)\d{5,}\b", "[ACCOUNT_ID]", text)
@@ -38,5 +46,8 @@ def safe_error_text(value):
         lambda match: match.group(1) + "=[REDACTED]", text)
     text = re.sub(
         r"(?i)\b(balance|cash|funds|buying power|price|amount|margin|equity)\s*[:=]\s*[$€£]?[+-]?\d[\d,.]*",
+        lambda match: match.group(1) + "=[REDACTED]", text)
+    text = re.sub(
+        r"(?i)\b(conid|strike|expiration|expiry|lastTradeDateOrContractMonth)\s*[:=]\s*[^\s,;{}]+",
         lambda match: match.group(1) + "=[REDACTED]", text)
     return re.sub(r"[$€£]\s*[+-]?\d[\d,.]*", "[FINANCIAL_VALUE]", text)

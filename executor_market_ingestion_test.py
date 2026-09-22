@@ -11,6 +11,7 @@ import unittest
 from executor_market_ingestion import (
     IngestionError, OPTION_NORMALIZED_CALLBACK, PROVEN_SEMANTICS,
     ReadOnlyMarketIngestion, SPX_NORMALIZED_CALLBACK, SPXContract,
+    VALIDATED_IBKR_LIMITATIONS,
 )
 from executor_ibkr_observation import ReadOnlyIBKREvidenceAdapter
 from executor_redaction import safe_error_text
@@ -329,6 +330,13 @@ class MarketIngestionTest(unittest.TestCase):
         self.assertNotIn(synthetic_value,
                          safe_error_text(("pass" + "word") + "=" + synthetic_value))
         self.assertEqual(safe_error_text(None), "[NON_TEXT_ERROR]")
+        encoded = "SPXW  " + "260922C07195000"
+        human = "SPX (SPXW) " + "SEP 22 '26 7195 Call"
+        for value in (encoded, human, "strike=7195 expiration=20260922 conId=123456"):
+            cleaned = safe_error_text("request failed for " + value)
+            self.assertNotIn("7195", cleaned)
+            self.assertNotIn("20260922", cleaned)
+            self.assertNotIn("123456", cleaned)
 
     def test_session_validator_exception_is_contained(self):
         self.pair()
@@ -371,6 +379,8 @@ class MarketIngestionTest(unittest.TestCase):
                            "IBKR_INTEGER_TIME_SEMANTICS_UNPROVEN",
                            "TICK_BY_TICK_MARKET_DATA_TYPE_BINDING_UNPROVEN"):
             self.assertIn(dependency, result["runtime_dependencies"])
+        for limitation in VALIDATED_IBKR_LIMITATIONS:
+            self.assertIn(limitation, result["runtime_dependencies"])
 
     def test_no_broker_import_or_mutation_reachability(self):
         path = Path(__file__).with_name("executor_market_ingestion.py")

@@ -47,6 +47,17 @@ for node in ast.walk(diagnostic_tree):
     if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
             and isinstance(node.func.value, ast.Name) and node.func.value.id == "app"):
         assert node.func.attr in allowed_diagnostic_calls, ("Unexpected diagnostic TWS API", node.func.attr)
+provenance_tree = ast.parse((root / "ibkr_market_provenance_validation.py").read_text())
+allowed_provenance_calls = {
+    "connect", "reqContractDetails", "reqSecDefOptParams", "reqMarketDataType",
+    "reqMktData", "reqTickByTickData", "cancelTickByTickData", "cancelMktData",
+    "isConnected", "disconnect", "result",
+}
+for node in ast.walk(provenance_tree):
+    if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name) and node.func.value.id == "app"):
+        assert node.func.attr in allowed_provenance_calls, (
+            "Unexpected provenance TWS API", node.func.attr)
 for name in ("executor_dry_run.py", "executor_local_service.py",
              "executor_local_web.py", "executor_ibkr_observation.py"):
     assert "ibkr_option_market_diagnostic" not in (root / name).read_text(), name
