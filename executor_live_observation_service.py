@@ -10,10 +10,23 @@ from executor_ibkr_observation import ReadOnlyIBKREvidenceAdapter
 
 
 class LocalReadOnlyObservationService:
-    def __init__(self, adapter=None):
+    def __init__(self, adapter=None, snapshot_machine=None):
         self.adapter = adapter or ReadOnlyIBKREvidenceAdapter()
+        self.snapshot_machine = snapshot_machine
 
     def status(self):
+        if self.snapshot_machine is not None:
+            cycle = self.snapshot_machine.status(time.monotonic())
+            return {"mode": "READ-ONLY LIVE OBSERVATION / NO ORDERS",
+                    "state": "RECOVERY REQUIRED" if cycle["recovery_required"] else
+                             "BLOCKED" if cycle["block_new_entry"] else "READ-ONLY CONNECTED",
+                    "lifecycle": "OBSERVATION ONLY", "ready": False,
+                    "reason": "; ".join(cycle["block_reasons"]) or "READ-ONLY RECONCILED FLAT",
+                    "trade_count": None, "trade_limit": 2, "position": None,
+                    "activity": [], "development_status": "OBSERVATION ONLY",
+                    "fixture": None, "fixtures": [], "replay_index": None,
+                    "replay_total": None, "snapshot": cycle,
+                    "order_visibility": "API_VISIBLE_ONLY"}
         evidence = self.adapter.observe(datetime.now(timezone.utc), time.monotonic())
         return {"mode": "READ-ONLY LIVE OBSERVATION / NO ORDERS",
                 "state": evidence.state, "lifecycle": "OBSERVATION ONLY",

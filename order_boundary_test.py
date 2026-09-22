@@ -52,7 +52,8 @@ for name in ("executor_dry_run.py", "executor_local_service.py",
     assert "ibkr_option_market_diagnostic" not in (root / name).read_text(), name
 for path in root.glob("*.py"):
     tree = ast.parse(path.read_text(), filename=str(path))
-    if path.name in {"executor_ibkr_observation.py", "executor_live_observation_service.py"}:
+    if path.name in {"executor_ibkr_observation.py", "executor_live_observation_service.py",
+                     "executor_broker_snapshot.py"}:
         for node in ast.walk(tree):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 names = ([alias.name for alias in node.names] if isinstance(node, ast.Import)
