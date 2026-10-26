@@ -2,10 +2,12 @@
 import hashlib
 from pathlib import Path
 import tempfile
+import sys
 import unittest
 from unittest.mock import patch
 import zipfile
 from mortificatio_runtime_audit import REQUIRED,lock_local_wheels,runtime_audit
+from pip._vendor.packaging.tags import platform_tags
 
 
 class RuntimeAuditTest(unittest.TestCase):
@@ -13,8 +15,8 @@ class RuntimeAuditTest(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.root=Path(self.tmp.name)
         for name in REQUIRED:self.wheel(name,{'webauthn':'3.0.1','setuptools':'78.1.1'}.get(name,'100.0'))
 
-    def wheel(self,name,version,requires='',python='>=3.9'):
-        normalized=name.replace('-','_');path=self.root/(normalized+'-'+version+'-py3-none-any.whl')
+    def wheel(self,name,version,requires='',python='>=3.9',tag='py3-none-any'):
+        normalized=name.replace('-','_');path=self.root/(normalized+'-'+version+'-'+tag+'.whl')
         text='Metadata-Version: 2.1\nName: '+name+'\nVersion: '+version+'\nRequires-Python: '+python+'\n'+requires
         with zipfile.ZipFile(path,'w') as archive:archive.writestr(normalized+'-'+version+'.dist-info/METADATA',text)
         return path
@@ -23,6 +25,24 @@ class RuntimeAuditTest(unittest.TestCase):
         first=lock_local_wheels(self.root);self.assertEqual(first,lock_local_wheels(self.root))
         for wheel in self.root.glob('*.whl'):self.assertIn(hashlib.sha256(wheel.read_bytes()).hexdigest(),first)
         self.assertEqual(first.count('--hash=sha256:'),len(REQUIRED))
+
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Linux wheel compatibility')
+    def test_native_linux_cpython313_wheel_is_accepted(self):
+        next(self.root.glob('ibapi-*.whl')).unlink()
+        wheel=self.wheel('ibapi','100.0',tag='cp313-cp313-'+next(platform_tags()))
+        result=lock_local_wheels(self.root,'3.13.18')
+        self.assertIn('ibapi==100.0 --hash=sha256:'+hashlib.sha256(wheel.read_bytes()).hexdigest(),result)
+
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Linux wheel compatibility')
+    def test_linux_rejects_foreign_platforms_and_non313_abi(self):
+        tags=('cp313-cp313-macosx_11_0_x86_64','cp313-cp313-win_amd64',
+              'cp314-cp314-'+next(platform_tags()))
+        for tag in tags:
+            with self.subTest(tag=tag):
+                next(self.root.glob('ibapi-*.whl')).unlink()
+                self.wheel('ibapi','100.0',tag=tag)
+                with self.assertRaisesRegex(ValueError,r'Wheel incompatible with CPython 3\.13/native platform:'):
+                    lock_local_wheels(self.root,'3.13.18')
 
     def test_old_vulnerable_setuptools_and_old_webauthn_are_rejected(self):
         for name,version in (('setuptools','58.0.4'),('webauthn','2.7.1'),('pip','26.0.1')):

@@ -14,7 +14,7 @@ import zipfile
 from pip._vendor.packaging.markers import default_environment
 from pip._vendor.packaging.requirements import Requirement
 from pip._vendor.packaging.specifiers import SpecifierSet
-from pip._vendor.packaging.tags import cpython_tags,compatible_tags,mac_platforms
+from pip._vendor.packaging.tags import cpython_tags,compatible_tags,platform_tags
 from pip._vendor.packaging.utils import canonicalize_name,parse_wheel_filename
 from pip._vendor.packaging.version import Version
 
@@ -48,13 +48,13 @@ def lock_local_wheels(directory,target='3.13.0'):
     """Validate complete wheel closure; hash actual artifacts, never installed RECORDs.
 
     This does NOT install, resolve online, assert zero CVEs, or authorize execution.
-    Target platform is this macOS architecture; target interpreter is CPython 3.13.
+    Target platform is native to this host; target interpreter is CPython 3.13.
     """
     version=Version(target)
     if version.release[:2]!=(3,13):raise ValueError('Explicit CPython 3.13 target required')
     root=Path(directory)
     if not root.is_dir() or root.is_symlink():raise ValueError('Local wheel directory required')
-    platforms=list(mac_platforms(arch=platform.machine()))
+    platforms=list(platform_tags())
     tags=set(cpython_tags((3,13),platforms=platforms))|set(compatible_tags((3,13),interpreter='cp313',platforms=platforms))
     environment=default_environment();environment.update(python_version='3.13',python_full_version=target,
         implementation_version=target,extra='')
@@ -63,7 +63,7 @@ def lock_local_wheels(directory,target='3.13.0'):
         if file.is_symlink():raise ValueError('Symlink wheel refused')
         name,wheel_version,_,wheel_tags=parse_wheel_filename(file.name)
         name=canonicalize_name(name)
-        if not wheel_tags&tags:raise ValueError('Wheel incompatible with CPython 3.13/macOS: '+file.name)
+        if not wheel_tags&tags:raise ValueError('Wheel incompatible with CPython 3.13/native platform: '+file.name)
         if name in records:raise ValueError('Ambiguous duplicate wheel for '+name)
         if name in MINIMUM and wheel_version<MINIMUM[name]:raise ValueError('Vulnerable/obsolete policy floor: '+name)
         with zipfile.ZipFile(file) as archive:
@@ -85,7 +85,7 @@ def lock_local_wheels(directory,target='3.13.0'):
             dependency=canonicalize_name(requirement.name)
             if requirement.url or requirement.extras or dependency not in records or records[dependency]['version'] not in requirement.specifier:
                 raise ValueError('Unresolved/unsupported dependency: '+name+' -> '+raw)
-    lines=['# Offline artifact lock; CPython '+target+' / macOS '+platform.machine(),
+    lines=['# Offline artifact lock; CPython '+target+' / '+platform.system()+' '+platform.machine(),
         '# Generated from local wheels. Does not certify CVE clearance or broker compatibility.']
     lines+=['{}=={} --hash=sha256:{}'.format(name,record['version'],record['hash']) for name,record in sorted(records.items())]
     return '\n'.join(lines)+'\n'
