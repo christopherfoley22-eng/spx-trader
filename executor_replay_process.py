@@ -41,12 +41,13 @@ def _digest(value):
 class DurableReplayRunner:
     """Resume a validated replay by verifying durable audit before every step."""
 
-    def __init__(self, session: ReplaySession, db_path, checkpoint=None):
+    def __init__(self, session: ReplaySession, db_path, checkpoint=None, emergency=None):
         if not isinstance(session, ReplaySession):
             raise ReplayRecoveryError("Validated replay session required")
         self.session = session
         self.path = Path(db_path)
         self.checkpoint = checkpoint or (lambda label: None)
+        self.emergency = emergency
         self.intent_id = "replay:" + session.session_id
         self.input_digest = _digest(asdict(session))
         self._preflight_existing_file()
@@ -55,7 +56,7 @@ class DurableReplayRunner:
             self.controller = DryRunExecutor(
                 self.path, session.account_id,
                 lambda t: t.strftime("%Y%m%d") in session.expirations,
-                session.max_exit_chunk, initial_trading_day=first_day)
+                session.max_exit_chunk, initial_trading_day=first_day, emergency=emergency)
             self.controller.db.execute("""
                 CREATE TABLE IF NOT EXISTS replay_progress (
                     singleton INTEGER PRIMARY KEY CHECK(singleton=1),
@@ -312,7 +313,10 @@ class DurableReplayRunner:
         event = self.session.events[index]
         seq = event.sequence
         snapshot = self._snapshot(event)
-        if seq == self.session.intent_sequence:
+        emergency = self.emergency.status() if self.emergency is not None else None
+        if emergency and emergency["latched"]:
+            self.controller.request_exit_all(emergency["request_id"])
+        if seq == self.session.intent_sequence and not (emergency and emergency["latched"]):
             accepted = self._journal_event("intent:" + self.intent_id, "INTENT_ACCEPTED")
             if accepted is None:
                 self.checkpoint("{}:before_intent".format(seq))
@@ -327,20 +331,52 @@ class DurableReplayRunner:
                 self.intent_id, event.account, event.spx, event.options,
                 self._snapshot(event), event.now_wall, event.monotonic)
             self.checkpoint("{}:authorized".format(seq))
+        entry_gate = self._journal_event(self.intent_id + ":entry-risk-gate:" + str(seq), "ENTRY_RISK_GATE")
+        if self.controller.status().phase == "ENTERING" and entry_gate is None:
+            # Persist the pre-fill decision so a crash after a fill cannot add
+            # an extra pre-entry observation to this event's journal on resume.
+            entry_gate = {"had_position": bool(self.controller.status().owned)}
+            self.controller._transaction(lambda: self.controller._event(
+                self.intent_id + ":entry-risk-gate:" + str(seq), "ENTRY_RISK_GATE", entry_gate))
+        if self.controller.status().phase == "ENTERING" and entry_gate["had_position"]:
+            option = next((o for o in event.options if o.contract.con_id == self.plan["con_id"]), None)
+            if option is None:
+                raise ReplayRecoveryError("Exact option feed missing during partial entry")
+            self.controller.observe_option(self.intent_id + ":option-pre-entry:" + str(seq),
+                                           option, self._snapshot(event), event.now_wall, event.monotonic)
+            if self.controller.status().phase == "ENTERING":
+                self.controller.observe(self.intent_id + ":spx-pre-entry:" + str(seq), event.spx,
+                                        self._snapshot(event), event.now_wall, event.monotonic)
         if self.controller.status().phase == "ENTERING":
             if self.session.fill_mode == "AUTO":
-                while self.controller.entry_chunks():
+                while self.controller.status().phase == "ENTERING" and self.controller.entry_chunks():
                     chunk_id, qty = self.controller.entry_chunks()[0]
                     self._fill_entry(event, chunk_id, qty, False, "sim-buy:" + chunk_id)
+                    if self.emergency is not None and self.emergency.blocked():
+                        self.controller.request_exit_all(self.emergency.status()["request_id"])
             else:
                 for fill in (x for x in event.fills if x["side"] == "ENTRY"):
+                    if self.controller.status().phase != "ENTERING":
+                        break
                     chunk_id = self.intent_id + ":entry:" + str(fill["chunk_index"])
                     self._fill_entry(event, chunk_id, fill["quantity"],
                                      fill["rejected"], fill["event_id"])
-            if not self.controller.entry_chunks():
+            if self.controller.status().phase == "ENTERING" and not self.controller.entry_chunks():
                 self.controller.finish_entry(self._snapshot(event), event.monotonic)
                 self.checkpoint("{}:open".format(seq))
-        if self.controller.status().phase in {"OPEN", "EXITING"}:
+        if self.controller.status().owned and self.controller.status().phase in {"ENTERING", "OPEN", "EXITING"}:
+            option = next((o for o in event.options if o.contract.con_id == self.plan["con_id"]), None)
+            if option is not None:
+                self.checkpoint("{}:before_option_risk".format(seq))
+                try:
+                    self.controller.observe_option(self.intent_id + ":option:" + str(seq),
+                                                   option, self._snapshot(event), event.now_wall, event.monotonic)
+                except EvidenceError:
+                    if self.controller.status().phase == "ENTERING":
+                        raise
+                    # SPX profit exits still run; _quote below reports bad data.
+                self.checkpoint("{}:option_risk".format(seq))
+        if self.controller.status().owned and self.controller.status().phase in {"ENTERING", "OPEN", "EXITING"}:
             if event.spx is None:
                 raise ReplayRecoveryError("Underlying feed missing while position active")
             market_id = self.intent_id + ":spx:" + str(seq)
@@ -384,6 +420,11 @@ class DurableReplayRunner:
                 self.checkpoint("{}:before_flat".format(seq))
                 self.controller.confirm_flat(self._snapshot(event), event.monotonic)
                 self.checkpoint("{}:flat".format(seq))
+        if (self.emergency is not None and self.emergency.blocked()
+                and self.controller.status().phase == "FLAT"):
+            request_id = self.emergency.status()["request_id"]
+            self.controller.confirm_emergency_flat(request_id, self._snapshot(event), event.monotonic)
+            self.emergency.confirm_flat("simulated-reconciled:"+request_id)
         for fill in event.fills:
             expected = "ENTRY_EVENT" if fill["side"] == "ENTRY" else "EXIT_EVENT"
             if self._journal_event(fill["event_id"], expected) is None:

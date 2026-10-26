@@ -30,6 +30,16 @@ SELL simulation uses its observed bid. A changed authorized entry quote blocks
 the fill. A repeated fill ID with a changed simulated price is rejected.
 Neither price is an actual broker fill.
 
+The active controller's initial stop is weighted-average simulated BUY premium
+minus 3.25, triggered by the exact option's fresh LIVE bid. SPX observations
+continue to drive profit protection and trailing exits. Canonical losing
+fixtures explicitly include independent option bid paths; their SPX paths
+alone do not imply a premium stop. The `make_session` builder accepts
+`option_bids`, including the initial observation, for such offline tests.
+Premium risk can be evaluated without SPX; simulated SELL fills still require
+the existing synchronized positive-quote execution evidence. A zero bid may
+latch EXITING but cannot manufacture an executable fill.
+
 `AUTO` mode fills all available chunks at the current usable synthetic quote.
 `SCRIPTED` mode processes only listed callbacks, allowing partial, rejected,
 duplicate, and delayed fills. Missing or invalid evidence leaves the position

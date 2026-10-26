@@ -2,9 +2,9 @@
   "version": 1,
   "cases": [
     {"name": "immediate_winner", "favorable": [5.0, 2.0], "final": "CONFIRMED_FLAT", "reason": "LET_IT_RIDE_REVERSAL"},
-    {"name": "immediate_loser", "favorable": [-3.24, -3.25], "final": "CONFIRMED_FLAT", "reason": "INITIAL_STOP"},
-    {"name": "chop_around_entry", "favorable": [0.5, -0.5, 1.0, -1.0, -3.25], "final": "CONFIRMED_FLAT", "reason": "INITIAL_STOP"},
-    {"name": "three_ninety_nine_unarmed_stop", "favorable": [3.99, 1.25, -3.25], "final": "CONFIRMED_FLAT", "reason": "INITIAL_STOP"},
+    {"name": "immediate_loser", "favorable": [-3.24, -3.25], "option_bids": [9.9, 6.76, 6.75], "final": "CONFIRMED_FLAT", "reason": "INITIAL_STOP"},
+    {"name": "chop_around_entry", "favorable": [0.5, -0.5, 1.0, -1.0, -3.25], "option_bids": [9.9, 9.9, 9.8, 9.9, 8.0, 6.75], "final": "CONFIRMED_FLAT", "reason": "INITIAL_STOP"},
+    {"name": "three_ninety_nine_unarmed_stop", "favorable": [3.99, 1.25, -3.25], "option_bids": [9.9, 9.9, 8.0, 6.75], "final": "CONFIRMED_FLAT", "reason": "INITIAL_STOP"},
     {"name": "four_floor_one_twenty_six", "favorable": [4.0, 1.26], "final": "UNRESOLVED_OPEN", "reason": null},
     {"name": "four_floor_one_twenty_five", "favorable": [4.0, 1.25], "final": "CONFIRMED_FLAT", "reason": "PROFIT_PROTECTION_FLOOR"},
     {"name": "four_dip_remains_armed", "favorable": [4.0, 3.99, 1.26, 1.25], "final": "CONFIRMED_FLAT", "reason": "PROFIT_PROTECTION_FLOOR"},

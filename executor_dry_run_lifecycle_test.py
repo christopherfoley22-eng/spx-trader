@@ -80,9 +80,12 @@ class Scenario:
             ) == "FILLED"
         assert self.engine.finish_entry(self.broker(), self.mono) == "OPEN"
 
-    def tick(self, favorable, event=None):
+    def tick(self, favorable, event=None, option_bid=9.9):
         price = 5000.0 + favorable if self.direction == "CALL" else 5000.0 - favorable
         observation = self.step(price)
+        self.engine.observe_option((event or "tick-" + str(self.seq)) + ":option",
+                                   replace(self.options()[0], bid=option_bid),
+                                   self.broker(), self.wall, self.mono)
         return self.engine.observe(event or "tick-" + str(self.seq), observation,
                                    self.broker(), self.wall, self.mono)
 
@@ -139,8 +142,8 @@ for direction in ("CALL", "PUT"):
         s = Scenario(directory, direction)
         assert s.start(1)["quantity"] == 1
         s.fill_entry()
-        assert s.tick(-3.24) == "OPEN"
-        assert s.tick(-3.25) == "EXITING"
+        assert s.tick(-3.24, option_bid=6.76) == "OPEN"
+        assert s.tick(-3.25, option_bid=6.75) == "EXITING"
         assert s.engine.status().exit_reason == "INITIAL_STOP"
         s.exit_all()
         s.engine.close()

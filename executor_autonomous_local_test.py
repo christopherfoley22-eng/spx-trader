@@ -141,12 +141,15 @@ with tempfile.TemporaryDirectory() as directory:
     service.close()
 
 
-# The normal UI path has no SELL/quantity/strike/expiration/exit controls.
+# Normal strategy entries remain direction-only. The only exit control is the
+# explicitly requested durable emergency route, not an ad hoc sell endpoint.
 ui = Path(__file__).with_name("executor_local_ui.html").read_text()
 web = Path(__file__).with_name("executor_local_web.py").read_text()
 assert "'/api/execute'" in ui
 assert 'self.path == "/api/execute"' in web
-for forbidden in ("/api/sell", "/api/exit", 'name="quantity"',
+assert "'/api/exit-all'" in ui
+assert 'id="exit-all"' in ui
+for forbidden in ("/api/sell", "'/api/exit'", '"/api/exit"', 'name="quantity"',
                   'name="strike"', 'name="expiration"', "manual sell"):
     assert forbidden not in ui.lower()
 

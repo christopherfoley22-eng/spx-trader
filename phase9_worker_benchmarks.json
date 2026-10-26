@@ -1,0 +1,83 @@
+{
+  "execution_enabled": false,
+  "origin": "SYNTHETIC_ONLY",
+  "platform": "macOS-13.7.8-x86_64-i386-64bit",
+  "real_ibkr_measured": false,
+  "runtime": "3.9.6",
+  "safety_violations": 0,
+  "samples": [
+    {
+      "actual_fills": 0,
+      "origin": "SYNTHETIC_ONLY",
+      "quantity": 125,
+      "receipt_to_adapter_ms": 109.055798,
+      "receipt_to_trigger_ms": 9.691016,
+      "reserved": 125,
+      "safety_violations": 0,
+      "trigger_to_adapter_ms": 99.364782
+    },
+    {
+      "actual_fills": 0,
+      "origin": "SYNTHETIC_ONLY",
+      "quantity": 125,
+      "receipt_to_adapter_ms": 107.221766,
+      "receipt_to_trigger_ms": 6.70916,
+      "reserved": 125,
+      "safety_violations": 0,
+      "trigger_to_adapter_ms": 100.512606
+    },
+    {
+      "actual_fills": 0,
+      "origin": "SYNTHETIC_ONLY",
+      "quantity": 125,
+      "receipt_to_adapter_ms": 101.647781,
+      "receipt_to_trigger_ms": 6.732643,
+      "reserved": 125,
+      "safety_violations": 0,
+      "trigger_to_adapter_ms": 94.915138
+    },
+    {
+      "actual_fills": 0,
+      "origin": "SYNTHETIC_ONLY",
+      "quantity": 125,
+      "receipt_to_adapter_ms": 118.654977,
+      "receipt_to_trigger_ms": 9.511408,
+      "reserved": 125,
+      "safety_violations": 0,
+      "trigger_to_adapter_ms": 109.143569
+    },
+    {
+      "actual_fills": 0,
+      "origin": "SYNTHETIC_ONLY",
+      "quantity": 125,
+      "receipt_to_adapter_ms": 127.271179,
+      "receipt_to_trigger_ms": 9.592789,
+      "reserved": 125,
+      "safety_violations": 0,
+      "trigger_to_adapter_ms": 117.67839
+    }
+  ],
+  "summary": {
+    "receipt_to_adapter_ms": {
+      "median": 109.055798,
+      "p95": 127.271179,
+      "p99": 127.271179,
+      "samples": 5,
+      "worst": 127.271179
+    },
+    "receipt_to_trigger_ms": {
+      "median": 9.511408,
+      "p95": 9.691016,
+      "p99": 9.691016,
+      "samples": 5,
+      "worst": 9.691016
+    },
+    "trigger_to_adapter_ms": {
+      "median": 100.512606,
+      "p95": 117.67839,
+      "p99": 117.67839,
+      "samples": 5,
+      "worst": 117.67839
+    }
+  }
+}

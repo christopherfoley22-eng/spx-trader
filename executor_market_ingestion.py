@@ -25,9 +25,11 @@ ROLES = ("SPX_UNDERLYING", "EXACT_SPXW_OPTION")
 PURPOSES = {"SPX_UNDERLYING": "SPX_UNDERLYING_MARKET_DATA",
             "EXACT_SPXW_OPTION": "EXACT_SPXW_OPTION_MARKET_DATA"}
 INFO_CODES = frozenset((2104, 2106, 2107, 2108, 2158))
+MAX_CALLBACK_DIAGNOSTICS = 256
 PROVEN_SEMANTICS = "UTC_EVENT_TIME_SEMANTICS_PROVEN"
 SPX_NORMALIZED_CALLBACK = "NORMALIZED_SPX_VALUE"
 OPTION_NORMALIZED_CALLBACK = "NORMALIZED_ATOMIC_BID_ASK"
+GREEKS_NORMALIZED_CALLBACK = "NORMALIZED_OPTION_COMPUTATION"
 VALIDATED_IBKR_LIMITATIONS = (
     "SPX_LAST_ALLLAST_MIDPOINT_TICK_BY_TICK_UNSUPPORTED",
     "SPXW_BID_ASK_TICK_BY_TICK_UNSUPPORTED_FOR_VALIDATED_CONTRACT",
@@ -67,6 +69,9 @@ class Request:
     last_source: object = None
     events: tuple = ()
     diagnostics: tuple = ()
+    greeks: object = None
+    last_greeks_source: object = None
+    greeks_events: tuple = ()
 
 
 @dataclass(frozen=True)
@@ -95,6 +100,39 @@ class QuoteEvidence:
     ask_size: object = None
     bid_past_low: object = None
     ask_past_high: object = None
+
+
+@dataclass(frozen=True)
+class OptionGreeks:
+    delta: float
+    gamma: float
+    vega: float
+    theta: float
+    implied_volatility: float
+    option_price: float
+    underlying_price: float
+    pv_dividend: float
+    provenance: object = None
+
+
+def validate_greeks(contract, greeks):
+    """Reject absent computations, IBKR sentinels, and wrong-right deltas."""
+    if not isinstance(contract, VerifiedOptionContract) or not isinstance(greeks, OptionGreeks):
+        raise IngestionError("GREEKS_INCOMPLETE")
+    values = (greeks.delta, greeks.gamma, greeks.vega, greeks.theta,
+              greeks.implied_volatility, greeks.option_price,
+              greeks.underlying_price, greeks.pv_dividend)
+    if any(not isinstance(value, (int, float)) or isinstance(value, bool)
+           or not math.isfinite(value) or abs(value) >= 1e100 for value in values):
+        raise IngestionError("GREEKS_INVALID_OR_UNSET")
+    if (contract.right not in {"C", "P"}
+            or not (-1 <= greeks.delta <= 1)
+            or (contract.right == "C" and greeks.delta < 0)
+            or (contract.right == "P" and greeks.delta > 0)
+            or min(greeks.gamma, greeks.vega, greeks.implied_volatility,
+                   greeks.pv_dividend) < 0
+            or greeks.option_price <= 0 or greeks.underlying_price <= 0):
+        raise IngestionError("GREEKS_INVALID_OR_WRONG_RIGHT")
 
 
 def _mono(value):
@@ -161,7 +199,7 @@ class ReadOnlyMarketIngestion:
 
     def _invalidate_all(self, reason):
         self.global_invalid = reason
-        self.requests = {key: replace(value, invalid=reason, spx=None, option=None)
+        self.requests = {key: replace(value, invalid=reason, spx=None, option=None, greeks=None)
                          for key, value in self.requests.items()}
 
     def _request(self, generation, request_id):
@@ -218,7 +256,7 @@ class ReadOnlyMarketIngestion:
     def cancel(self, generation, request_id):
         with self.lock:
             request = self._request(generation, request_id)
-            self.requests[request_id] = replace(request, cancelled=True, spx=None, option=None)
+            self.requests[request_id] = replace(request, cancelled=True, spx=None, option=None, greeks=None)
 
     def market_data_type(self, generation, request_id, code, receipt_utc,
                          receipt_monotonic, binding_proven=False):
@@ -229,18 +267,20 @@ class ReadOnlyMarketIngestion:
             classification = MARKET_TYPES.get(code)
             if classification is None or isinstance(code, bool):
                 self.requests[request_id] = replace(request, invalid="MARKET_TYPE_UNKNOWN",
-                                                    spx=None, option=None)
+                                                    spx=None, option=None, greeks=None)
                 return
             if binding_proven is not True:
                 diagnostic = ("MARKET_DATA_TYPE", classification,
                               "REQUEST_BINDING_UNPROVEN")
                 self.requests[request_id] = replace(
                     request, classification="UNAVAILABLE", classification_bound=False,
-                    spx=None, option=None, diagnostics=request.diagnostics + (diagnostic,))
+                    spx=None, option=None, greeks=None,
+                    diagnostics=(request.diagnostics + (diagnostic,))[-MAX_CALLBACK_DIAGNOSTICS:])
                 return
             if request.classification != classification or not request.classification_bound:
                 request = replace(request, classification=classification,
                                   classification_bound=True, spx=None, option=None,
+                                  greeks=None, last_greeks_source=None, greeks_events=(),
                                   last_source=None, events=())
             self.requests[request_id] = request
 
@@ -257,7 +297,8 @@ class ReadOnlyMarketIngestion:
         diagnostic = (callback_type, detail,
                       "OPAQUE_IBKR_INTEGER_AND_EVENT_IDENTITY_AMBIGUOUS_DIAGNOSTIC_ONLY")
         self.requests[request_id] = replace(
-            request, diagnostics=request.diagnostics + (diagnostic,), spx=None, option=None)
+            request, diagnostics=(request.diagnostics + (diagnostic,))[-MAX_CALLBACK_DIAGNOSTICS:],
+            spx=None, option=None)
 
     def tick_by_tick_last(self, generation, request_id, contract, tick_type,
                           raw_time, price, receipt_utc, receipt_monotonic):
@@ -307,8 +348,12 @@ class ReadOnlyMarketIngestion:
             self._receipt(receipt_utc, receipt_monotonic)
             label = ("LAST_TRADE_TIME_NOT_BID_ASK" if callback_type == "TICK_STRING"
                      and tick_type in (45, 88) else "RECEIPT_ONLY")
+            changes = {}
+            if callback_type == "TICK_PRICE":
+                changes["spx" if request.role == "SPX_UNDERLYING" else "option"] = None
             self.requests[request_id] = replace(
-                request, diagnostics=request.diagnostics + ((callback_type, tick_type, label),))
+                request, diagnostics=(request.diagnostics + ((callback_type, tick_type, label),))[-MAX_CALLBACK_DIAGNOSTICS:],
+                **changes)
 
     def _validate_metadata(self, request_id, generation, bid_size, ask_size,
                            bid_past_low, ask_past_high):
@@ -324,7 +369,7 @@ class ReadOnlyMarketIngestion:
 
     def _normalized(self, generation, request_id, role, contract, event_id, source_utc,
                     uncertainty, semantics, callback_type, receipt_utc,
-                    receipt_monotonic, fingerprint):
+                    receipt_monotonic, fingerprint, greeks=False):
         request = self._request(generation, request_id)
         if request.role != role or contract != request.contract:
             self._invalidate_all("CALLBACK_CONTRACT_OR_ROLE_MISMATCH")
@@ -333,7 +378,8 @@ class ReadOnlyMarketIngestion:
         valid_uncertainty = _mono(uncertainty) and uncertainty <= MAX_SYNC_SECONDS
         if (not isinstance(event_id, str) or not event_id or len(event_id) > 128
                 or semantics != PROVEN_SEMANTICS or not valid_uncertainty
-                or callback_type != ({"SPX_UNDERLYING": SPX_NORMALIZED_CALLBACK,
+                or callback_type != (GREEKS_NORMALIZED_CALLBACK if greeks else
+                                     {"SPX_UNDERLYING": SPX_NORMALIZED_CALLBACK,
                                       "EXACT_SPXW_OPTION": OPTION_NORMALIZED_CALLBACK}[role])):
             self.requests[request_id] = replace(request, invalid="NORMALIZED_PROVENANCE_INVALID")
             raise IngestionError("NORMALIZED_PROVENANCE_INVALID")
@@ -343,18 +389,21 @@ class ReadOnlyMarketIngestion:
         except (EvidenceError, IngestionError) as exc:
             self.requests[request_id] = replace(request, invalid="SOURCE_TIME_INVALID")
             raise IngestionError("SOURCE_TIME_INVALID") from exc
-        prior_events = dict(request.events)
+        prior_events = dict(request.greeks_events if greeks else request.events)
         if event_id in prior_events:
             if prior_events[event_id] != fingerprint:
                 self.requests[request_id] = replace(
                     request, invalid="CONTRADICTORY_EVENT_ID", spx=None, option=None)
                 raise IngestionError("CONTRADICTORY_EVENT_ID")
             return request, None, None, True
-        if request.last_source is not None and source < request.last_source:
+        last_source = request.last_greeks_source if greeks else request.last_source
+        if last_source is not None and source < last_source:
             self.requests[request_id] = replace(
                 request, invalid="SOURCE_TIME_BACKWARD", spx=None, option=None)
             raise IngestionError("SOURCE_TIME_BACKWARD")
-        return (replace(request, events=request.events + ((event_id, fingerprint),)),
+        updated = (replace(request, greeks_events=request.greeks_events + ((event_id, fingerprint),))
+                   if greeks else replace(request, events=request.events + ((event_id, fingerprint),)))
+        return (updated,
                 source, wall, False)
 
     def proven_spx_event(self, generation, request_id, contract, event_id, source_utc,
@@ -416,6 +465,49 @@ class ReadOnlyMarketIngestion:
                                   bid_past_low, ask_past_high)
             self.requests[request_id] = replace(request, option=quote, last_source=source)
 
+    def proven_option_greeks(self, generation, request_id, contract, event_id,
+                             source_utc, source_uncertainty_seconds, greeks,
+                             receipt_utc, receipt_monotonic,
+                             source_semantics=PROVEN_SEMANTICS,
+                             callback_type=GREEKS_NORMALIZED_CALLBACK):
+        """Explicit normalized proof boundary; never called by raw IBKR callbacks."""
+        with self.lock:
+            request = self._request(generation, request_id)
+            try:
+                validate_greeks(contract, greeks)
+            except IngestionError:
+                self.requests[request_id] = replace(request, invalid="GREEKS_INVALID", greeks=None)
+                raise
+            fingerprint = (source_utc, source_uncertainty_seconds, greeks,
+                           source_semantics, callback_type)
+            request, source, wall, duplicate = self._normalized(
+                generation, request_id, "EXACT_SPXW_OPTION", contract, event_id,
+                source_utc, source_uncertainty_seconds, source_semantics, callback_type,
+                receipt_utc, receipt_monotonic, fingerprint, greeks=True)
+            if duplicate:
+                return
+            if request.classification != "LIVE" or not request.classification_bound:
+                self.requests[request_id] = replace(request, last_greeks_source=source, greeks=None)
+                return
+            provenance = Provenance(source, wall, receipt_monotonic, source_semantics,
+                                    "PROVEN_NORMALIZED_OPTION_COMPUTATION", callback_type,
+                                    float(source_uncertainty_seconds))
+            self.requests[request_id] = replace(request, greeks=replace(greeks, provenance=provenance),
+                                                last_greeks_source=source)
+
+    def ordinary_option_computation(self, generation, request_id, contract, tick_type,
+                                    receipt_utc, receipt_monotonic):
+        """IBKR computations have receipt time only; never promote them to proof."""
+        with self.lock:
+            request = self._request(generation, request_id)
+            if request.role != "EXACT_SPXW_OPTION" or contract != request.contract:
+                self._invalidate_all("CALLBACK_CONTRACT_OR_ROLE_MISMATCH")
+                raise IngestionError(self.global_invalid)
+            self._receipt(receipt_utc, receipt_monotonic)
+            self.requests[request_id] = replace(
+                request, greeks=None, diagnostics=(request.diagnostics +
+                (("TICK_OPTION_COMPUTATION", tick_type, "RECEIPT_ONLY_NOT_EXCHANGE_TIME"),))[-MAX_CALLBACK_DIAGNOSTICS:])
+
     def error(self, generation, request_id, code, message, advanced="",
               receipt_utc=None, receipt_monotonic=None):
         with self.lock:
@@ -443,7 +535,7 @@ class ReadOnlyMarketIngestion:
                 return
             if request is not None:
                 self.requests[request_id] = replace(
-                    request, invalid="REQUEST_ERROR", spx=None, option=None)
+                    request, invalid="REQUEST_ERROR", spx=None, option=None, greeks=None)
             else:
                 self._invalidate_all("GLOBAL_OR_UNKNOWN_ERROR")
 
@@ -464,7 +556,7 @@ class ReadOnlyMarketIngestion:
                 "source_uncertainty_seconds": item.source_uncertainty_seconds}
 
     def status(self, now_wall, now_monotonic, direction=None,
-               session_has_expiration=None):
+               session_has_expiration=None, require_greeks=False):
         with self.lock:
             reasons = []
             by_role = {request.role: request for request in self.requests.values()}
@@ -490,10 +582,13 @@ class ReadOnlyMarketIngestion:
                     reasons.append(label + "_LIVE_NOT_REQUESTED")
             spx = spx_req.spx if spx_req else None
             option = opt_req.option if opt_req else None
+            greeks = opt_req.greeks if opt_req else None
             if spx is None:
                 reasons.append("SPX_SOURCE_UNAVAILABLE")
             if option is None:
                 reasons.append("OPTION_BID_ASK_SOURCE_UNAVAILABLE")
+            if require_greeks and greeks is None:
+                reasons.append("OPTION_GREEKS_SOURCE_UNAVAILABLE")
             if not reasons:
                 try:
                     if direction not in {"CALL", "PUT"} or session_has_expiration is None:
@@ -534,7 +629,22 @@ class ReadOnlyMarketIngestion:
                         now_utc, now_monotonic, session_has_expiration)
                     if self.last_receipt is not None and now_monotonic < self.last_receipt:
                         raise EvidenceError("MONOTONIC_CLOCK_ROLLBACK")
-                except (EvidenceError, TypeError, ValueError) as exc:
+                    if require_greeks:
+                        validate_greeks(opt_req.contract, greeks)
+                        provenance = greeks.provenance
+                        validate_observation_time(provenance.source_utc, provenance.receipt_monotonic,
+                                                  now_utc, now_monotonic)
+                        wall_age = (now_utc - provenance.receipt_utc).total_seconds()
+                        if not -MAX_FUTURE_SECONDS <= wall_age <= MAX_AGE_SECONDS:
+                            raise EvidenceError("GREEKS_WALL_RECEIPT_STALE_OR_FUTURE")
+                        for evidence in (spx, option):
+                            item = evidence.provenance
+                            worst = (abs((item.source_utc - provenance.source_utc).total_seconds())
+                                     + item.source_uncertainty_seconds + provenance.source_uncertainty_seconds)
+                            if (worst > MAX_SYNC_SECONDS
+                                    or abs(item.receipt_monotonic - provenance.receipt_monotonic) > MAX_SYNC_SECONDS):
+                                raise EvidenceError("GREEKS_SYNCHRONIZATION_UNPROVEN")
+                except (EvidenceError, IngestionError, TypeError, ValueError) as exc:
                     reasons.append("PAIR_PROVENANCE_INVALID: " + safe_error_text(str(exc)))
             requests = {}
             for role, request in (("SPX_UNDERLYING", spx_req),
@@ -565,6 +675,8 @@ class ReadOnlyMarketIngestion:
                 ) + VALIDATED_IBKR_LIMITATIONS,
                 "requests": requests,
                 "source_pair_valid": not reasons,
+                "greeks_required": require_greeks,
+                "greeks_provenance": self._provenance_status(greeks),
                 "block_reasons": tuple(dict.fromkeys(reasons)),
                 "errors": tuple(self.errors),
                 "executable": False,

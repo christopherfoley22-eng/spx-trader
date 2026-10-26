@@ -197,6 +197,32 @@ class EvidenceClock:
                 raise EvidenceError("Market source timestamp moved backward")
         self.last_source.update(pending)
 
+    def validate_option_risk(self, direction, option, now_wall, now_monotonic,
+                             session_has_expiration):
+        """Validate standalone liquidation evidence; no SPX feed is needed.
+
+        A zero bid is valid risk evidence, though not an executable sell quote.
+        Entry and simulated execution retain their stricter positive-bid gates.
+        """
+        if not isinstance(option, OptionObservation) or option.status is not FeedStatus.LIVE:
+            raise EvidenceError("Live exact option observation missing")
+        if (not isinstance(option.bid, (int, float)) or isinstance(option.bid, bool)
+                or not math.isfinite(option.bid) or option.bid < 0
+                or not positive_number(option.ask)):
+            raise EvidenceError("Invalid option risk price")
+        if option.bid > option.ask:
+            raise EvidenceError("Crossed option market")
+        validate_contract(option.contract, direction, now_wall, session_has_expiration)
+        if option.quote_con_id != option.contract.con_id:
+            raise EvidenceError("Quote belongs to a different conId")
+        validate_observation_time(option.source_time, option.received_monotonic,
+                                  now_wall, now_monotonic)
+        key = ("OPTION", option.contract.con_id)
+        previous = self.last_source.get(key)
+        if previous is not None and option.source_time < previous:
+            raise EvidenceError("Market source timestamp moved backward")
+        self.last_source[key] = option.source_time
+
 
 def validate_broker_snapshot(snapshot, selected_account, now_monotonic):
     if not isinstance(snapshot, VerifiedBrokerSnapshot) or snapshot.complete is not True:

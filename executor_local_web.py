@@ -10,8 +10,26 @@ import secrets
 
 from executor_local_service import LocalDryRunService, LocalServiceError
 from executor_live_observation_service import LocalReadOnlyObservationService
+from mortificatio_shadow import ShadowLocalService, observation_from_dict
+from executor_protective_service import LocalProtectiveExitService
 
 HTML = Path(__file__).with_name("executor_local_ui.html").read_bytes()
+
+def dispatch_shadow_post(service, path, raw):
+    """Dispatch only shadow-local mutations; returns None for other modes/routes."""
+    if not isinstance(service, ShadowLocalService):
+        return None
+    if path == "/api/shadow/click" and set(raw) == {"direction", "request_id", "click_timestamp"}:
+        return service.record_click(raw["direction"], raw["request_id"], raw["click_timestamp"])
+    if path == "/api/shadow/observations" and set(raw) == {"request_id", "selected_contract", "observations"}:
+        return service.attach_observations(raw["request_id"], raw["selected_contract"],
+                                           [observation_from_dict(item) for item in raw["observations"]])
+    return None
+
+def shadow_execution_block(service, path):
+    if isinstance(service, ShadowLocalService) and path in {"/api/execute", "/api/demo/intent"}:
+        return {"error": "Shadow mode has no execution endpoint", "code": "SHADOW_NO_EXECUTION", "retryable": False}
+    return None
 
 
 def make_handler(service):
@@ -46,6 +64,11 @@ def make_handler(service):
                 return self._send(HTTPStatus.FORBIDDEN, {"error": "Invalid local host"})
             if self.path == "/":
                 page = HTML.replace(b"__CSRF_TOKEN__", csrf_secret.encode())
+                if isinstance(service, ShadowLocalService):
+                    page = page.replace(b"CONNECTING\xe2\x80\xa6 \xc2\xb7 NO REAL ORDERS",
+                                        b"SHADOW / NO ORDERS \xc2\xb7 NO REAL ORDERS")
+                    page = page.replace(b"Waiting for authoritative local status",
+                                        b"Decision journal; no simulated position")
                 return self._send(HTTPStatus.OK, page, "text/html; charset=utf-8", True)
             if self.path == "/api/status":
                 return self._send(HTTPStatus.OK, service.status())
@@ -78,6 +101,16 @@ def make_handler(service):
             except (ValueError, json.JSONDecodeError):
                 return self._send(HTTPStatus.BAD_REQUEST, {"error": "Malformed request"})
             try:
+                blocked = shadow_execution_block(service, self.path)
+                if blocked is not None:
+                    return self._send(HTTPStatus.FORBIDDEN, blocked)
+                shadow_result = dispatch_shadow_post(service, self.path, raw)
+                if shadow_result is not None:
+                    return self._send(HTTPStatus.OK, shadow_result)
+                if self.path == "/api/exit-all" and set(raw) == {"request_id"} and isinstance(service, (LocalDryRunService, LocalProtectiveExitService)):
+                    return self._send(HTTPStatus.OK, service.exit_all(raw["request_id"]))
+                if isinstance(service, LocalProtectiveExitService):
+                    return self._send(HTTPStatus.FORBIDDEN, {"error": "Offline protection model has no execution endpoint", "code": "PROTECTION_MODEL_NO_EXECUTION"})
                 if self.path == "/api/demo/intent" and set(raw) == {"direction", "request_id"}:
                     return self._send(HTTPStatus.OK, service.submit(raw["direction"], raw["request_id"]))
                 if self.path == "/api/execute" and set(raw) == {"direction", "request_id"}:
@@ -109,19 +142,21 @@ def main():
     parser = argparse.ArgumentParser(description="Local Executor DRY RUN / SIMULATION UI")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--state-dir", default=".executor-local")
-    parser.add_argument("--mode", choices=("simulation", "observation"), default="simulation")
+    parser.add_argument("--mode", choices=("simulation", "observation", "shadow"), default="simulation")
     args = parser.parse_args()
     service = (LocalDryRunService(args.state_dir) if args.mode == "simulation"
+               else ShadowLocalService(args.state_dir) if args.mode == "shadow"
                else LocalReadOnlyObservationService())
     server = make_server(service, args.port)
     print("Executor {}: http://127.0.0.1:{}".format(
-        "DRY RUN / SIMULATION" if args.mode == "simulation" else "READ-ONLY OBSERVATION",
+        "DRY RUN / SIMULATION" if args.mode == "simulation" else
+        "SHADOW / NO ORDERS" if args.mode == "shadow" else "READ-ONLY OBSERVATION",
         server.server_port))
     try:
         server.serve_forever()
     finally:
         server.server_close()
-        if isinstance(service, LocalDryRunService):
+        if isinstance(service, (LocalDryRunService, ShadowLocalService)):
             service.close()
 
 

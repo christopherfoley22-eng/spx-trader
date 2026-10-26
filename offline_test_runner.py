@@ -6,6 +6,11 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parent
+# This generated suite performs many durable SQLite restart/replay sessions.
+# Its process budget is independent of every market freshness/safety assertion.
+PROCESS_TIMEOUTS = {"executor_replay_stress_test.py": 180,
+                    "executor_execution_twin_test.py": 180,
+                    "executor_liquidity_stress_test.py": 180}
 IBKR_CONNECTED = {
     "connection_test.py",
     "spx_live_test.py",
@@ -33,13 +38,14 @@ def main():
                 return 2
     failures = []
     for script in offline:
+        timeout = PROCESS_TIMEOUTS.get(script.name, 60)
         try:
             result = subprocess.run(
                 [sys.executable, "-B", str(script)], cwd=ROOT,
-                capture_output=True, text=True, timeout=60,
+                capture_output=True, text=True, timeout=timeout,
             )
         except subprocess.TimeoutExpired:
-            failures.append((script.name, "Timed out after 60 seconds"))
+            failures.append((script.name, "Timed out after {} seconds".format(timeout)))
             continue
         if result.returncode:
             failures.append((script.name, (result.stdout + result.stderr)[-4000:]))

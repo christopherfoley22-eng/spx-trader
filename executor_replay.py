@@ -457,25 +457,48 @@ class ReplayRunner:
                                                         event.options, snapshot(event), event.now_wall,
                                                         event.monotonic)
                             transition(event.sequence, before)
+                        if controller.status().phase == "ENTERING" and controller.status().owned:
+                            option = quote_for_plan(event)
+                            if option is None:
+                                raise EvidenceError("Exact option feed missing during partial entry")
+                            before = "ENTERING"
+                            controller.observe_option(intent_id + ":option-pre-entry:" + str(event.sequence),
+                                                      option, snapshot(event), event.now_wall, event.monotonic)
+                            if controller.status().phase == "ENTERING":
+                                controller.observe(intent_id + ":spx-pre-entry:" + str(event.sequence), event.spx,
+                                                   snapshot(event), event.now_wall, event.monotonic)
+                            transition(event.sequence, before)
                         if controller.status().phase == "ENTERING":
                             if session.fill_mode == "AUTO":
-                                while controller.entry_chunks():
+                                while controller.status().phase == "ENTERING" and controller.entry_chunks():
                                     chunk_id, qty = controller.entry_chunks()[0]
                                     entry_fill(event, chunk_id, qty, False,
                                                "sim-buy:" + chunk_id)
                             else:
                                 for fill in (x for x in event.fills if x["side"] == "ENTRY"):
+                                    if controller.status().phase != "ENTERING":
+                                        break
                                     consumed_fills.add(fill["event_id"])
                                     chunk_id = intent_id + ":entry:" + str(fill["chunk_index"])
                                     entry_fill(event, chunk_id, fill["quantity"],
                                                fill["rejected"], fill["event_id"])
-                            if not controller.entry_chunks():
+                            if controller.status().phase == "ENTERING" and not controller.entry_chunks():
                                 before = "ENTERING"
                                 controller.finish_entry(snapshot(event), event.monotonic)
                                 transition(event.sequence, before)
-                        if controller.status().phase in {"OPEN", "EXITING"}:
+                        if controller.status().owned and controller.status().phase in {"ENTERING", "OPEN", "EXITING"}:
+                            option = quote_for_plan(event)
+                            if option is not None:
+                                before = controller.status().phase
+                                try:
+                                    controller.observe_option(intent_id + ":option:" + str(event.sequence),
+                                                              option, snapshot(event), event.now_wall, event.monotonic)
+                                except EvidenceError as exc:
+                                    blocks.append({"sequence": event.sequence, "reason": str(exc)})
+                                transition(event.sequence, before)
+                        if controller.status().owned and controller.status().phase in {"ENTERING", "OPEN", "EXITING"}:
                             # A missing option feed cannot create an exit fill.
-                            # Valid SPX alone may still trigger protective risk.
+                            # Valid SPX alone may still trigger profit exits.
                             if event.spx is None:
                                 raise EvidenceError("SPX feed missing while position active")
                             if quote_for_plan(event) is None:

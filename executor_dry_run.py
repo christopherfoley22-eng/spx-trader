@@ -15,7 +15,7 @@ from zoneinfo import ZoneInfo
 
 from mortificatio_v01 import MortificatioV01Error, OptionQuote, build_entry_plan, exit_chunks
 from simulation_evidence import (
-    EvidenceClock, EvidenceError, SPXObservation, OptionObservation,
+    EvidenceClock, EvidenceError, FeedStatus, SPXObservation, OptionObservation,
     VerifiedAccountSnapshot, VerifiedBrokerSnapshot, VerifiedOptionContract,
     conservative_usable_funds, positive_number, validate_broker_snapshot,
 )
@@ -25,6 +25,22 @@ MAX_TRADES = 2
 PROFIT_PROTECTION_ARM = Decimal("4.00")
 PROFIT_PROTECTION_FLOOR = Decimal("1.25")
 LET_IT_RIDE_ARM = Decimal("5.00")
+INITIAL_STOP_PREMIUM_POINTS = Decimal("3.25")
+PREMIUM_STOP_VERSION = 1
+
+
+def spx_profit_decision(direction, entry, previous_peak, was_ride, price):
+    """Shared pure evaluation of the existing SPX profit rules, in SPX points."""
+    favorable = price-entry if direction == "CALL" else entry-price
+    previous_best = previous_peak-entry if direction == "CALL" else entry-previous_peak
+    best = max(previous_best, favorable)
+    peak = price if favorable > previous_best else previous_peak
+    ride = bool(was_ride) or best >= LET_IT_RIDE_ARM
+    reversal = best-favorable
+    reason = ("LET_IT_RIDE_REVERSAL" if ride and reversal >= Decimal("3.00") else
+              "PROFIT_PROTECTION_FLOOR" if not ride and best >= PROFIT_PROTECTION_ARM
+              and favorable <= PROFIT_PROTECTION_FLOOR else None)
+    return favorable, best, peak, ride, reversal, reason
 
 
 class DryRunError(RuntimeError):
@@ -44,17 +60,20 @@ class DryRunStatus:
     profit_protection: bool
     peak: str
     exit_reason: Optional[str]
+    average_entry_premium: Optional[str] = None
+    initial_stop_premium: Optional[str] = None
 
 
 class DryRunExecutor:
     """Single-writer, event-idempotent simulated lifecycle.
 
-    ``press`` is the sole user action. Every later method consumes external
-    evidence or simulated fill callbacks, and never invokes a broker API.
+    ``press`` accepts direction; ``request_exit_all`` records an offline
+    emergency. Later methods consume evidence or simulated fill callbacks
+    and never invoke a broker API.
     """
 
     def __init__(self, path, selected_account, session_has_expiration,
-                 max_exit_chunk=10, initial_trading_day=None):
+                 max_exit_chunk=10, initial_trading_day=None, emergency=None):
         if not isinstance(selected_account, str) or not selected_account.strip():
             raise DryRunError("Explicit runtime account required")
         if not callable(session_has_expiration):
@@ -68,6 +87,7 @@ class DryRunExecutor:
             except (TypeError, ValueError):
                 raise DryRunError("Initial replay trading date invalid")
         self.selected_account = selected_account
+        self.emergency = emergency
         self.session_has_expiration = session_has_expiration
         self.max_exit_chunk = max_exit_chunk
         self.db = sqlite3.connect(str(path), isolation_level=None)
@@ -111,6 +131,7 @@ class DryRunExecutor:
         elif row[0] != account_hash:
             raise DryRunError("Runtime account differs from persisted binding")
         self._check_state()
+        self._emergency_requested = self.db.execute("SELECT 1 FROM audit WHERE kind='EMERGENCY_REQUESTED' LIMIT 1").fetchone() is not None
 
     def close(self):
         self.db.close()
@@ -152,6 +173,9 @@ class DryRunExecutor:
             raise DryRunError("Intent contains plan or position")
         if phase in {"ENTERING", "OPEN", "EXITING"}:
             plan = self._plan(raw_plan)
+            if plan.get("premium_stop_version") != PREMIUM_STOP_VERSION:
+                raise DryRunError("Active journal predates premium stops; recovery required")
+            self._stop_price(plan.get("ask"))
             if (plan["direction"] != direction or not isinstance(plan["quantity"], int)
                     or isinstance(plan["quantity"], bool) or not 1 <= plan["quantity"] <= 25):
                 raise DryRunError("Plan contradicts lifecycle")
@@ -182,19 +206,31 @@ class DryRunExecutor:
                         or evidence["ask"] != plan["ask"] or evidence["bid"] != plan["bid"]
                         or evidence["quantity"] != plan["quantity"]
                         or evidence["chunks"] != plan["chunks"]
+                        or evidence.get("premium_stop_version") != PREMIUM_STOP_VERSION
                         or evidence["spx"] != plan["spx_price"]):
                     raise DryRunError("Plan differs from authorization audit")
             except (TypeError, ValueError, KeyError):
                 raise DryRunError("Authorization audit corrupted")
             if qty and con_id != plan["con_id"]:
                 raise DryRunError("Broker contract contradicts plan")
+            filled, average = self._premium_basis(row)
+            if (filled > plan["quantity"] or qty > filled
+                    or (phase != "EXITING" and qty != filled)
+                    or (phase in {"OPEN", "EXITING"} and not filled)):
+                raise DryRunError("Premium fill ledger contradicts position")
+            chunks_filled = self.db.execute(
+                "SELECT coalesce(sum(filled),0) FROM chunks WHERE side='ENTRY'").fetchone()[0]
+            if chunks_filled != filled:
+                raise DryRunError("Premium fill ledger contradicts entry chunks")
+            if filled:
+                self._stop_price(average)
         if phase == "OPEN" and (qty == 0 or entry is None or peak is None or reason):
             raise DryRunError("Open state incomplete")
         if phase == "EXITING" and (entry is None or peak is None or reason is None):
             raise DryRunError("Exit state incomplete")
         if ride not in (0, 1) or isinstance(ride, bool):
             raise DryRunError("Strategy mode corrupted")
-        if phase in {"OPEN", "EXITING"}:
+        if phase in {"OPEN", "EXITING"} or phase == "ENTERING" and entry is not None:
             try:
                 entry_value, peak_value = Decimal(entry), Decimal(peak)
                 favorable_peak = ((peak_value-entry_value) if direction == "CALL"
@@ -213,9 +249,61 @@ class DryRunExecutor:
             except (TypeError, ValueError):
                 raise DryRunError("Strategy price state corrupted")
             if phase == "EXITING" and reason not in {"INITIAL_STOP", "PROFIT_PROTECTION_FLOOR",
-                                                        "LET_IT_RIDE_REVERSAL"}:
+                                                        "LET_IT_RIDE_REVERSAL", "EMERGENCY_EXIT_ALL"}:
                 raise DryRunError("Unknown exit reason")
         return row
+
+    @staticmethod
+    def _stop_price(premium):
+        try:
+            if isinstance(premium, bool):
+                raise ValueError
+            value = Decimal(str(premium))
+            stop = value - INITIAL_STOP_PREMIUM_POINTS
+            if not value.is_finite() or not stop.is_finite() or stop <= 0:
+                raise ValueError
+            return stop
+        except (InvalidOperation, TypeError, ValueError):
+            raise DryRunError("Entry premium must produce a finite positive 3.25-point stop")
+
+    def _premium_basis(self, row, additional_qty=0, additional_premium=None):
+        """Rebuild cost from committed fills, never from a quote or broker avgCost.
+
+        The audit is the durable authority, so restart and partial exits cannot
+        reset the entry average. Legacy active journals fail closed above.
+        """
+        if row[3] is None:
+            return 0, None
+        plan = self._plan(row[3])
+        total, cost = 0, Decimal(0)
+        prefix = row[1] + ":entry:"
+        try:
+            for (raw,) in self.db.execute("SELECT detail FROM audit WHERE kind='ENTRY_EVENT'"):
+                detail = json.loads(raw)
+                if not detail["chunk"].startswith(prefix):
+                    continue
+                qty = detail["fill"]
+                if not isinstance(qty, int) or isinstance(qty, bool) or qty < 0:
+                    raise ValueError
+                if not qty:
+                    continue
+                premium = Decimal(detail["entry_premium"])
+                if (not premium.is_finite() or premium <= 0
+                        or premium > Decimal(str(plan["ask"]))
+                        or detail["con_id"] != plan["con_id"]
+                        or (detail["simulated_price"] is None
+                            and premium != Decimal(str(plan["ask"])))
+                        or (detail["simulated_price"] is not None
+                            and premium != Decimal(detail["simulated_price"]))):
+                    raise ValueError
+                total += qty
+                cost += qty * premium
+            if additional_qty:
+                cost += additional_qty * Decimal(additional_premium)
+                total += additional_qty
+        except (InvalidOperation, TypeError, ValueError, KeyError, AttributeError):
+            raise DryRunError("Premium fill evidence missing or corrupted")
+        return total, cost / total if total else None
 
     @staticmethod
     def _plan(raw):
@@ -230,11 +318,14 @@ class DryRunExecutor:
 
     def status(self):
         phase, _, direction, raw, day, count, qty, con_id, entry, peak, ride, reason = self._check_state()
-        protected = (phase in {"OPEN", "EXITING"} and not ride
+        protected = (phase in {"ENTERING", "OPEN", "EXITING"} and entry is not None and not ride
                      and ((Decimal(peak) - Decimal(entry)) if direction == "CALL"
                           else (Decimal(entry) - Decimal(peak))) >= PROFIT_PROTECTION_ARM)
+        _, average = self._premium_basis(self._row())
         return DryRunStatus(phase, direction, self._plan(raw)["quantity"] if raw else 0,
-                            qty, con_id, count, day, bool(ride), protected, peak or "0", reason)
+                            qty, con_id, count, day, bool(ride), protected, peak or "0", reason,
+                            str(average) if average is not None else None,
+                            str(self._stop_price(average)) if average is not None else None)
 
     def journal(self):
         return self.db.execute("SELECT event_id,kind,detail FROM audit ORDER BY rowid").fetchall()
@@ -284,13 +375,14 @@ class DryRunExecutor:
             self._event("day:" + day, "DAY_ROLLOVER", {"day": day, "count": 0})
 
     def press(self, intent_id, direction, snapshot, now_wall, now_monotonic):
-        """Accept one CALLS/PUTS human choice; no SELL user action exists."""
+        """Accept one CALLS/PUTS choice; emergency EXIT ALL is separate."""
         if (not isinstance(intent_id, str) or not intent_id or len(intent_id) > 120
                 or direction not in {"CALL", "PUT"} or not isinstance(now_wall, datetime)
                 or now_wall.tzinfo is None):
             raise DryRunError("Valid direction and New York timestamp required")
         day = now_wall.astimezone(NY).date().isoformat()
         def action():
+            self._entry_emergency_gate()
             row = self._reconcile(snapshot, now_monotonic)
             if row[1] == intent_id and row[2] == direction:
                 return "DUPLICATE"
@@ -329,6 +421,7 @@ class DryRunExecutor:
                   spx: SPXObservation, options: Sequence[OptionObservation],
                   snapshot: VerifiedBrokerSnapshot, now_wall, now_monotonic):
         def action():
+            self._entry_emergency_gate()
             row = self._reconcile(snapshot, now_monotonic)
             if row[0] != "INTENT" or row[1] != intent_id or row[4] != now_wall.astimezone(NY).date().isoformat():
                 raise DryRunError("Intent or trading date changed")
@@ -340,10 +433,15 @@ class DryRunExecutor:
             plan = build_entry_plan(row[2], spx.price, funds,
                                     [OptionQuote(o.contract.con_id, o.contract.strike, o.ask) for o in options])
             chosen = next(o for o in options if o.contract.con_id == plan.con_id)
+            try:
+                self._stop_price(plan.ask)
+            except DryRunError as exc:
+                raise EvidenceError(str(exc)) from exc
             payload = {"direction": plan.direction, "spx_price": plan.spx_price,
                        "con_id": plan.con_id, "strike": plan.strike, "ask": plan.ask,
                        "bid": chosen.bid, "quantity": plan.quantity,
-                       "contract": asdict(chosen.contract), "chunks": plan.chunks}
+                       "contract": asdict(chosen.contract), "chunks": plan.chunks,
+                       "premium_stop_version": PREMIUM_STOP_VERSION}
             self.db.execute("UPDATE controller SET phase='ENTERING',plan=? WHERE singleton=1",
                             (json.dumps(payload, sort_keys=True),))
             for index, size in enumerate(plan.chunks):
@@ -356,6 +454,7 @@ class DryRunExecutor:
                          "cost_per_contract": str(Decimal(str(plan.ask)) * 100),
                          "affordable_contracts_capped": plan.quantity,
                          "quantity": plan.quantity,
+                         "premium_stop_version": PREMIUM_STOP_VERSION,
                          "chunks": plan.chunks, "spx": spx.price})
             return payload
         try:
@@ -399,10 +498,18 @@ class DryRunExecutor:
                 simulated_price_text = None
             detail = {"chunk": chunk_id, "fill": fill_qty, "rejected": rejected,
                       "con_id": fill_con_id, "simulated_price": simulated_price_text}
+            # An omitted simulated fill price means an ask fill, as before.
+            # Explicit prices may improve on that ask but cannot exceed it.
+            detail["entry_premium"] = (simulated_price_text if simulated_price_text is not None
+                                        else str(Decimal(str(option.ask)))
+                                        if fill_qty and isinstance(option, OptionObservation)
+                                        else None)
             if old:
                 if old != ("ENTRY_EVENT", json.dumps(detail, sort_keys=True, separators=(",", ":"))):
                     raise DryRunError("Changed fill event replay")
                 return "DUPLICATE"
+            if fill_qty:
+                self._entry_emergency_gate()
             if row[0] != "ENTERING":
                 raise DryRunError("Entry fill outside ENTERING")
             if snapshot is None or now_monotonic is None:
@@ -429,9 +536,11 @@ class DryRunExecutor:
                         or option.bid != plan["bid"] or option.ask != plan["ask"]
                         or spx.price != plan["spx_price"]
                         or (simulated_price_text is not None
-                            and price != Decimal(str(option.ask)))
+                            and price > Decimal(str(option.ask)))
                         or funds < Decimal(str(row[6] + fill_qty)) * Decimal(str(plan["ask"])) * 100):
                     raise EvidenceError("Entry evidence changed after authorization")
+                _, average = self._premium_basis(row, fill_qty, detail["entry_premium"])
+                self._stop_price(average)
             self._event(event_id, "ENTRY_EVENT", detail)
             self.db.execute("UPDATE chunks SET filled=filled+?,terminal=? WHERE chunk_id=?",
                             (fill_qty, int(rejected or chunk[1]+fill_qty == chunk[0]), chunk_id))
@@ -443,10 +552,13 @@ class DryRunExecutor:
             if fill_qty and row[6] == 0:
                 if row[5] >= MAX_TRADES:
                     raise DryRunError("Daily trade cap reached before first fill")
-                self.db.execute("UPDATE controller SET trades_today=trades_today+1 WHERE singleton=1")
+                self.db.execute("UPDATE controller SET trades_today=trades_today+1,entry_spx=?,peak=? WHERE singleton=1",
+                                (str(self._plan(row[3])["spx_price"]), str(self._plan(row[3])["spx_price"])))
                 self._event("count:" + row[1], "TRADE_COUNTED",
                             {"day": row[4], "daily_count": row[5]+1,
                              "first_fill_event": event_id})
+            if fill_qty:
+                self._apply_premium_stop(self._row(), option.bid)
             return "FILLED" if fill_qty else "REJECTED"
         return self._transaction(action)
 
@@ -468,7 +580,7 @@ class DryRunExecutor:
                                ("count:" + row[1],)).fetchone() is None:
                 raise DryRunError("Filled entry has no durable daily count")
             plan = self._plan(row[3])
-            self.db.execute("UPDATE controller SET phase='OPEN',entry_spx=?,peak=? WHERE singleton=1",
+            self.db.execute("UPDATE controller SET phase='OPEN',entry_spx=coalesce(entry_spx,?),peak=coalesce(peak,?) WHERE singleton=1",
                             (str(plan["spx_price"]), str(plan["spx_price"])))
             self._event("open:" + row[1], "OPEN_CONFIRMED",
                         {"quantity": row[6], "con_id": row[7], "daily_count": row[5],
@@ -476,8 +588,72 @@ class DryRunExecutor:
             return "OPEN"
         return self._transaction(action)
 
+    def _apply_premium_stop(self, row, bid):
+        """Called only inside a validated fill/observation transaction."""
+        _, average = self._premium_basis(row)
+        stop = self._stop_price(average)
+        if row[0] == "EXITING" or Decimal(str(bid)) > stop:
+            return
+        plan = self._plan(row[3])
+        if row[0] == "ENTERING":
+            self.db.execute("UPDATE chunks SET terminal=1 WHERE side='ENTRY'")
+            self.db.execute("UPDATE controller SET entry_spx=coalesce(entry_spx,?),peak=coalesce(peak,?) WHERE singleton=1",
+                            (str(plan["spx_price"]), str(plan["spx_price"])))
+            self._event("entry-halted:" + row[1], "ENTRY_HALTED",
+                        {"reason": "INITIAL_STOP", "filled_quantity": row[6]})
+            self._event("open:" + row[1], "OPEN_CONFIRMED",
+                        {"quantity": row[6], "con_id": row[7], "daily_count": row[5], "day": row[4]})
+        self.db.execute("UPDATE controller SET phase='EXITING',exit_reason='INITIAL_STOP' WHERE singleton=1")
+        self._event("exit:" + row[1], "EXIT_TRIGGERED",
+                    {"reason": "INITIAL_STOP", "basis": "OPTION_PREMIUM",
+                     "average_entry_premium": str(average), "stop_premium": str(stop),
+                     "bid": str(bid), "filled_quantity": row[6]})
+
+    def observe_option(self, event_id, option: OptionObservation, snapshot,
+                       now_wall, now_monotonic):
+        """Evaluate the long option's bid against its premium stop, even mid-entry.
+
+        This is a synthetic decision only. Stopping a partial entry terminates
+        unfilled simulation chunks; it does not cancel or submit broker orders.
+        """
+        def action():
+            row = self._reconcile(snapshot, now_monotonic)
+            if (not isinstance(option, OptionObservation)
+                    or not isinstance(option.contract, VerifiedOptionContract)
+                    or not isinstance(option.status, FeedStatus)
+                    or not isinstance(option.source_time, datetime)):
+                raise EvidenceError("Exact option risk observation required")
+            detail = {"contract": asdict(option.contract), "quote_con_id": option.quote_con_id,
+                      "bid": option.bid, "ask": option.ask, "status": option.status.value,
+                      "source_time": option.source_time.isoformat(),
+                      "receipt": option.received_monotonic}
+            old = self.db.execute("SELECT kind,detail FROM audit WHERE event_id=?", (event_id,)).fetchone()
+            if old:
+                if old != ("OPTION_RISK_OBSERVED", json.dumps(detail, sort_keys=True, separators=(",", ":"))):
+                    raise DryRunError("Changed option risk event replay")
+                return row[0]
+            if row[0] not in {"ENTERING", "OPEN", "EXITING"} or not row[6]:
+                raise DryRunError("No owned option position to monitor")
+            plan = self._plan(row[3])
+            if detail["contract"] != plan["contract"]:
+                raise EvidenceError("Exact option metadata changed during risk monitoring")
+            clock = EvidenceClock()
+            key = "OPTION:" + str(plan["con_id"])
+            prior = self.db.execute("SELECT source_time FROM market_watermark WHERE key=?", (key,)).fetchone()
+            if prior:
+                clock.last_source[("OPTION", plan["con_id"])] = datetime.fromisoformat(prior[0])
+            clock.validate_option_risk(row[2], option, now_wall, now_monotonic,
+                                       self.session_has_expiration)
+            self.db.execute("INSERT INTO market_watermark VALUES (?,?) ON CONFLICT(key) DO UPDATE SET source_time=excluded.source_time",
+                            (key, option.source_time.isoformat()))
+            self._apply_premium_stop(row, option.bid)
+            self._event(event_id, "OPTION_RISK_OBSERVED", detail)
+            return self._row()[0]
+        return self._transaction(action)
+
     def observe(self, event_id, spx: SPXObservation, snapshot,
                 now_wall, now_monotonic):
+        """Evaluate the unchanged SPX profit floor and trailing rules only."""
         def action():
             row = self._reconcile(snapshot, now_monotonic)
             old_event = self.db.execute("SELECT kind,detail FROM audit WHERE event_id=?", (event_id,)).fetchone()
@@ -489,8 +665,8 @@ class DryRunExecutor:
                         or prior.get("receipt") != spx.received_monotonic):
                     raise DryRunError("Changed market event replay")
                 return self.status().phase
-            if row[0] not in {"OPEN", "EXITING"}:
-                raise DryRunError("No open position to monitor")
+            if row[0] not in {"ENTERING", "OPEN", "EXITING"} or not row[6]:
+                raise DryRunError("No owned position to monitor")
             self._event("reconcile:market:" + event_id, "RECONCILED",
                         {"phase": row[0], "position": row[6], "open_orders": 0})
             clock = EvidenceClock()
@@ -508,41 +684,79 @@ class DryRunExecutor:
                                                            "receipt": spx.received_monotonic})
                 return "EXITING"
             price = Decimal(str(spx.price))
-            entry = Decimal(row[8])
-            previous_peak = Decimal(row[9])
-            favorable = (price-entry) if row[2] == "CALL" else (entry-price)
-            best = (previous_peak-entry) if row[2] == "CALL" else (entry-previous_peak)
-            if favorable > best:
-                best = favorable
+            # Older partial-entry journals may have no SPX baseline yet.
+            baseline = str(self._plan(row[3])["spx_price"])
+            entry = Decimal(row[8] or baseline)
+            previous_peak = Decimal(row[9] or baseline)
+            if row[8] is None:
+                self.db.execute("UPDATE controller SET entry_spx=?,peak=? WHERE singleton=1",
+                                (str(entry), str(previous_peak)))
+            favorable, best, peak, ride, reversal, reason = spx_profit_decision(
+                row[2], entry, previous_peak, row[10], price)
+            if peak != previous_peak:
                 self.db.execute("UPDATE controller SET peak=? WHERE singleton=1", (str(price),))
                 self._event("peak:" + event_id, "HIGH_WATER", {"favorable": str(best)})
                 if best >= PROFIT_PROTECTION_ARM:
                     self._event("profit:" + row[1], "PROFIT_PROTECTION_ARMED",
                                 {"floor": "1.25"})
-            ride = bool(row[10]) or best >= LET_IT_RIDE_ARM
             if ride and not row[10]:
                 self.db.execute("UPDATE controller SET ride=1 WHERE singleton=1")
                 self._event("ride:" + row[1], "LET_IT_RIDE", {"peak": str(best)})
-            reversal = best-favorable
-            reason = None
-            if ride:
-                if reversal >= Decimal("3.00"):
-                    reason = "LET_IT_RIDE_REVERSAL"
-            elif best >= PROFIT_PROTECTION_ARM and favorable <= PROFIT_PROTECTION_FLOOR:
-                reason = "PROFIT_PROTECTION_FLOOR"
-            elif favorable <= Decimal("-3.25"):
-                reason = "INITIAL_STOP"
             if reason:
+                if row[0] == "ENTERING":
+                    self.db.execute("UPDATE chunks SET terminal=1 WHERE side='ENTRY'")
+                    self._event("entry-halted:" + row[1], "ENTRY_HALTED",
+                                {"reason": reason, "filled_quantity": row[6]})
+                    self._event("open:" + row[1], "OPEN_CONFIRMED",
+                                {"quantity": row[6], "con_id": row[7], "daily_count": row[5], "day": row[4]})
                 self.db.execute("UPDATE controller SET phase='EXITING',exit_reason=? WHERE singleton=1", (reason,))
                 self._event("exit:" + row[1], "EXIT_TRIGGERED",
                             {"reason": reason, "favorable": str(favorable),
                              "peak": str(best), "reversal": str(reversal)})
-            self._event(event_id, "MARKET_OBSERVED", {"phase": "EXITING" if reason else "OPEN",
+            self._event(event_id, "MARKET_OBSERVED", {"phase": "EXITING" if reason else row[0],
                                                        "price": spx.price,
                                                        "source_time": spx.source_time.isoformat(),
                                                        "status": spx.status.value,
                                                        "receipt": spx.received_monotonic})
-            return "EXITING" if reason else "OPEN"
+            return "EXITING" if reason else row[0]
+        return self._transaction(action)
+
+    def _entry_emergency_gate(self):
+        if self._emergency_requested or self.emergency is not None and self.emergency.blocked():
+            raise DryRunError("Emergency EXIT ALL blocks new simulated acquisition")
+
+    def request_exit_all(self, request_id):
+        """Persist intent immediately; no market quote or assumed broker flatness."""
+        self._emergency_requested = True
+        def action():
+            row = self._check_state()
+            if not self._event("emergency:" + request_id, "EMERGENCY_REQUESTED", {"request_id": request_id}):
+                return row[0]
+            if row[0] in {"INTENT", "ENTERING"}:
+                self.db.execute("UPDATE chunks SET terminal=1 WHERE side='ENTRY'")
+                if not row[6]:
+                    self._event("entry-empty:" + row[1], "ENTRY_REJECTED", {"count": row[5]})
+                    self.db.execute("UPDATE controller SET phase='FLAT',intent_id=NULL,direction=NULL,plan=NULL WHERE singleton=1")
+                    self.db.execute("DELETE FROM chunks")
+                    return "FLAT_AWAITING_EMERGENCY_RECONCILIATION"
+                plan = self._plan(row[3])
+                self.db.execute("UPDATE controller SET entry_spx=coalesce(entry_spx,?),peak=coalesce(peak,?) WHERE singleton=1",
+                                (str(plan["spx_price"]), str(plan["spx_price"])))
+                self._event("open:" + row[1], "OPEN_CONFIRMED",
+                            {"quantity": row[6], "con_id": row[7], "daily_count": row[5], "day": row[4]})
+            if row[6] and row[0] != "EXITING":
+                self.db.execute("UPDATE controller SET phase='EXITING',exit_reason='EMERGENCY_EXIT_ALL' WHERE singleton=1")
+                self._event("exit:" + row[1], "EXIT_TRIGGERED", {"reason": "EMERGENCY_EXIT_ALL"})
+            return self._row()[0]
+        return self._transaction(action)
+
+    def confirm_emergency_flat(self, request_id, snapshot, now_monotonic):
+        def action():
+            row = self._reconcile(snapshot, now_monotonic)
+            if row[0] != "FLAT" or row[6] or self.db.execute("SELECT 1 FROM chunks LIMIT 1").fetchone():
+                raise DryRunError("Emergency flat confirmation requires reconciled flat state")
+            self._event("emergency-flat:" + request_id, "EMERGENCY_FLAT_CONFIRMED", {"position": 0, "open_orders": 0})
+            return "FLAT_CONFIRMED"
         return self._transaction(action)
 
     def next_exit_chunk(self, snapshot, now_monotonic):

@@ -13,7 +13,8 @@ assert len(fixtures["cases"]) == 15
 for case in fixtures["cases"]:
     for direction in ("CALL", "PUT"):
         name = case["name"] + "_" + direction.lower()
-        session = ReplaySession.from_dict(make_session(name, direction, case["favorable"]))
+        session = ReplaySession.from_dict(make_session(name, direction, case["favorable"],
+                                                       option_bids=case.get("option_bids")))
         runner = ReplayRunner(session)
         baseline = runner.run()
         assert json.loads(json.dumps(baseline)) == baseline

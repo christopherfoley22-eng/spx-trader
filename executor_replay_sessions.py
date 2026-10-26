@@ -10,15 +10,20 @@ ACCOUNT = "SYNTHETIC_REPLAY_ONLY"
 
 
 def make_session(name, direction, favorable, *, quantity=11, fill_mode="AUTO",
-                 max_exit_chunk=10, start_offset_seconds=0):
+                 max_exit_chunk=10, start_offset_seconds=0, option_bids=None):
     """Build version-1 observations from a favorable SPX path.
 
+    Optional option_bids includes the initial observation and is independent
+    of the SPX path. No premium move is inferred from an underlying move.
     Favorable values describe test inputs, not trade signals. The controller
     alone determines state transitions and exit triggers.
     """
     if direction not in {"CALL", "PUT"}:
         raise ValueError("Direction invalid")
     right, con_id = ("C", 101) if direction == "CALL" else ("P", 102)
+    favorable = list(favorable)
+    if option_bids is not None and len(option_bids) != len(favorable) + 1:
+        raise ValueError("Option bid path must include every observation")
     observations = []
     for sequence, excursion in enumerate([0.0] + list(favorable)):
         now = BASE + timedelta(seconds=start_offset_seconds,
@@ -31,7 +36,8 @@ def make_session(name, direction, favorable, *, quantity=11, fill_mode="AUTO",
                          "expiration": "20260921", "trading_class": "SPXW",
                          "multiplier": "100", "currency": "USD", "strike": 5000.0,
                          "con_id": con_id},
-            "quote_con_id": con_id, "bid": 9.9, "ask": 10.0,
+            "quote_con_id": con_id, "bid": option_bids[sequence] if option_bids is not None else 9.9,
+            "ask": 10.0,
             "status": "LIVE", "source_time": timestamp,
             "received_monotonic": mono,
         }

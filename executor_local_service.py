@@ -5,6 +5,7 @@ observations are the only source of account, market, and broker evidence.
 """
 
 from datetime import datetime
+from decimal import Decimal
 from contextlib import contextmanager
 import fcntl
 import json
@@ -15,6 +16,7 @@ import threading
 import uuid
 
 from executor_dry_run import DryRunExecutor
+from executor_emergency import EmergencyLatch
 from executor_replay import ReplaySession
 from executor_replay_process import DurableReplayRunner
 from executor_replay_sessions import ACCOUNT, BASE, make_session
@@ -26,6 +28,7 @@ from simulation_evidence import (
 
 FIXTURES = json.loads(Path(__file__).with_name("executor_replay_fixtures.json").read_text())["cases"]
 PATHS = {item["name"]: item["favorable"] for item in FIXTURES}
+OPTION_BIDS = {item["name"]: item.get("option_bids") for item in FIXTURES}
 REQUEST_ID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
 
 
@@ -51,10 +54,12 @@ class LocalDryRunService:
             raise LocalServiceError("Another local Executor service owns this state directory") from exc
         self.db_path = self.root / "service.sqlite"
         self.executor_path = self.root / "executor.sqlite"
+        self.emergency = EmergencyLatch(self.root / "emergency.sqlite", ACCOUNT)
         self.lock = threading.RLock()
         self.factory = session_factory or (lambda name, direction, path, offset:
                                            make_session(name, direction, path,
-                                                        start_offset_seconds=offset))
+                                                        start_offset_seconds=offset,
+                                                        option_bids=OPTION_BIDS[self._fixture()]))
         self.db = sqlite3.connect(str(self.db_path), isolation_level=None,
                                   check_same_thread=False)
         self.db.execute("PRAGMA journal_mode=WAL")
@@ -93,7 +98,7 @@ class LocalDryRunService:
             return None
         return DryRunExecutor(self.executor_path, ACCOUNT,
                               lambda t: t.strftime("%Y%m%d") == BASE.strftime("%Y%m%d"),
-                              initial_trading_day=BASE.date().isoformat())
+                              initial_trading_day=BASE.date().isoformat(), emergency=self.emergency)
 
     def _verify_previous_completion(self):
         prior = self.db.execute(
@@ -106,7 +111,7 @@ class LocalDryRunService:
         if prior is None:
             raise LocalServiceError("Persisted Executor has no verified request history")
         try:
-            runner = DurableReplayRunner(self._session(prior), self.executor_path)
+            runner = DurableReplayRunner(self._session(prior), self.executor_path, emergency=self.emergency)
             try:
                 result = runner.result()
                 if (result["last_complete_index"] != len(runner.session.events) - 1
@@ -151,7 +156,7 @@ class LocalDryRunService:
         return session
 
     def _progress(self, row, stop_index=None):
-        runner = DurableReplayRunner(self._session(row), self.executor_path)
+        runner = DurableReplayRunner(self._session(row), self.executor_path, emergency=self.emergency)
         try:
             result = runner.run(stop_index=stop_index)
             phase = runner.controller.status().phase
@@ -174,9 +179,12 @@ class LocalDryRunService:
             # A request committed before process death is resumed from its
             # durable replay cursor; no second intent is invented.
             session = self._session(active)
-            runner = DurableReplayRunner(session, self.executor_path)
+            runner = DurableReplayRunner(session, self.executor_path, emergency=self.emergency)
             try:
-                if active[3]:
+                if self.emergency.blocked():
+                    runner.controller.request_exit_all(self.emergency.status()["request_id"])
+                    runner.run()
+                elif active[3]:
                     runner.run()
                 elif runner._progress()[3] < session.intent_sequence:
                     runner.run(stop_index=session.intent_sequence)
@@ -244,6 +252,8 @@ class LocalDryRunService:
             position = {"direction": status.direction, "quantity": status.owned,
                         "strike": plan["strike"] if plan else None,
                         "simulated_entry_ask": plan["ask"] if plan else None,
+                        "average_entry_premium": status.average_entry_premium,
+                        "initial_stop_premium": status.initial_stop_premium,
                         "entry_spx": plan["spx_price"] if plan else None,
                         "high_water_spx": status.peak,
                         "maximum_favorable_points": highs[-1] if highs else "0",
@@ -251,8 +261,22 @@ class LocalDryRunService:
                                     "PROFIT_PROTECTION" if status.profit_protection
                                     else "INITIAL_STOP",
                         "fixed_profit_floor_points": "1.25" if status.profit_protection else None,
+                        "early_protection_active": status.profit_protection,
+                        "trailing_active": status.ride,
+                        "trailing_threshold_spx": str(Decimal(status.peak) +
+                            (Decimal("-3") if status.direction == "CALL" else Decimal("3"))) if status.ride else None,
                         "exit_reason": status.exit_reason}
         automatic_active = bool(active and active[3])
+        emergency = self.emergency.status()
+        if emergency["latched"]:
+            ready = False
+            reason = "Emergency latch blocks new entries; offline reconciliation required"
+            confirmed = (emergency["phase"] == "FLAT_CONFIRMED" and phase == "FLAT"
+                         and any(kind == "EMERGENCY_FLAT_CONFIRMED" and event_id == "emergency-flat:"+emergency["request_id"]
+                                 for event_id, kind, _ in journal))
+            view = "EMERGENCY / FLAT CONFIRMED" if confirmed else "EMERGENCY EXIT PENDING"
+            if phase == "FLAT" and not confirmed:
+                phase = "EMERGENCY_PENDING"
         return {"mode": "DRY RUN / SIMULATION", "state": view,
                 "lifecycle": phase, "ready": ready, "reason": reason,
                 "trade_count": count, "trade_limit": 2,
@@ -261,6 +285,7 @@ class LocalDryRunService:
                 "fixture": self._fixture(), "fixtures": sorted(PATHS),
                 "replay_index": replay["last_complete_index"] if replay else None,
                 "replay_total": len(self._session(active).events) if active else None,
+                "emergency": emergency,
                 "automation": "RUNNING_TO_CONFIRMED_FLAT" if automatic_active
                               else "DIRECTION_ONLY_AUTOMATION_AVAILABLE",
                 "operator_action_required": False if automatic_active else None}
@@ -297,11 +322,15 @@ class LocalDryRunService:
             self.lock.release()
 
     def submit(self, direction, request_id, automatic=False):
+        if self.emergency.blocked():
+            raise LocalServiceError("Emergency EXIT ALL blocks new entries", code="EMERGENCY_LATCHED")
         if direction not in {"CALL", "PUT"} or not isinstance(request_id, str) or not REQUEST_ID.fullmatch(request_id):
             raise LocalServiceError("Malformed direction or request ID")
         if not isinstance(automatic, bool):
             raise LocalServiceError("Automation mode malformed")
         with self._intent_guard():
+            if self.emergency.blocked():
+                raise LocalServiceError("Emergency EXIT ALL blocks new entries", code="EMERGENCY_LATCHED")
             old = self.db.execute("SELECT request_id,direction,session_json FROM requests WHERE request_id=?",
                                   (request_id,)).fetchone()
             if old:
@@ -346,6 +375,13 @@ class LocalDryRunService:
         """Normal direction-only product path; no later operator action."""
         return self.submit(direction, request_id, automatic=True)
 
+    def exit_all(self, request_id):
+        """Persist independently of the replay lock; never wait for entry work."""
+        if not isinstance(request_id, str) or not REQUEST_ID.fullmatch(request_id):
+            raise LocalServiceError("Malformed emergency request ID")
+        result = self.emergency.request(request_id)
+        return {"result": result, "emergency": self.emergency.status(), "executable": False}
+
     def load_fixture(self, name):
         if not isinstance(name, str) or name not in PATHS:
             raise LocalServiceError("Unknown canonical fixture")
@@ -367,7 +403,7 @@ class LocalDryRunService:
                         code="INTENT_NOT_READY_RETRY", retryable=True)
                 raise LocalServiceError("No active synthetic replay", code="NO_ACTIVE_REPLAY")
             session = self._session(row)
-            runner = DurableReplayRunner(session, self.executor_path)
+            runner = DurableReplayRunner(session, self.executor_path, emergency=self.emergency)
             try:
                 cursor = runner._progress()[3]
             finally:

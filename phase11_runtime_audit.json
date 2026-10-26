@@ -1,0 +1,26 @@
+{
+  "assessment": "NO_GO",
+  "execution_enabled": false,
+  "issues": [
+    "PYTHON_3_13_MIGRATION_REQUIRED",
+    "MAINTAINED_TLS_STACK_REVALIDATION_REQUIRED",
+    "WEBAUTHN_BELOW_REVIEWED_FLOOR",
+    "SETUPTOOLS_BELOW_REVIEWED_FLOOR"
+  ],
+  "packages": {
+    "cbor2": "5.9.0",
+    "cffi": "2.0.0",
+    "cryptography": "48.0.1",
+    "ibapi": "9.81.1.post1",
+    "pip": "26.0.1",
+    "pyasn1": "0.6.4",
+    "pycparser": "2.23",
+    "pyopenssl": "26.2.0",
+    "setuptools": "58.0.4",
+    "typing-extensions": "4.16.0",
+    "webauthn": "2.7.1"
+  },
+  "python": "3.9.6",
+  "tls": "LibreSSL 2.8.3",
+  "vulnerability_scan_complete": false
+}

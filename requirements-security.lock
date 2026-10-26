@@ -1,0 +1,10 @@
+# Offline Phase 1 compatibility lock for the existing Python 3.9 / Intel macOS environment.
+# Upgrade Python and revalidate current library releases before production deployment.
+webauthn==2.7.1
+cryptography==48.0.1
+pyOpenSSL==26.2.0
+cbor2==5.9.0
+pyasn1==0.6.4
+cffi==2.0.0
+pycparser==2.23
+typing_extensions==4.16.0

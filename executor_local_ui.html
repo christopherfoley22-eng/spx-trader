@@ -20,17 +20,22 @@
     .dev{border-top:1px solid #34445a;margin-top:32px;padding-top:22px}.dev button{background:#304662;font-size:.95rem;min-height:42px;padding:10px 14px;margin:4px 4px 4px 0}
     select{background:#21344b;color:white;border:1px solid #4e6683;border-radius:8px;padding:10px;width:100%;font-size:1rem}
     .error{color:#ff9b9b;min-height:1.2em}
+    .shadow-results{overflow-x:auto}.shadow-card{border-top:1px solid #34445a;padding:14px 0}.shadow-card:first-child{border-top:0}.shadow-meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.quality{font-weight:800}.quality.verified{color:#81e6b0}.quality.unverified{color:#f5c781}.rule-grid{display:grid;grid-template-columns:repeat(2,minmax(180px,1fr));gap:8px;margin-top:10px}.rule{background:#101a28;border-radius:10px;padding:10px;font-size:.82rem}.rule strong{display:block;color:#dce8f8;margin-bottom:4px}.shadow-empty{color:#9aabc2;font-size:.9rem}
   </style>
 </head>
 <body>
-  <div class="banner" id="mode-banner">DRY RUN / SIMULATION · NO REAL ORDERS</div>
+  <div class="banner" id="mode-banner">CONNECTING… · NO REAL ORDERS</div>
   <main>
-    <header><div><h1>Executor</h1><small id="mode-subtitle">Local synthetic session</small></div><div id="count">0/2 trades</div></header>
+    <header><div><h1>Executor</h1><small id="mode-subtitle">Waiting for authoritative local status</small></div><div id="count">—</div></header>
     <section class="panel" aria-live="polite"><div class="muted">Executor status</div><div class="state" id="state">Loading…</div><div class="reason" id="reason"></div><div class="muted" id="lifecycle"></div></section>
     <div class="actions"><button class="call" id="calls" disabled>CALLS</button><button class="put" id="puts" disabled>PUTS</button></div>
+    <button id="exit-all" style="width:100%;background:#a32936" disabled>EXIT ALL</button>
+    <section class="panel" id="protection-panel" hidden><h2>Offline protective-stop model</h2><div id="protection-status"></div></section>
     <section class="panel" id="position-panel" hidden><h2>Simulated position</h2><dl id="position"></dl></section>
+    <section class="panel shadow-results" id="shadow-results" hidden><h2>Shadow rule comparison · read-only</h2><p class="muted">Baseline and research candidates use the same recorded observations. No fills or P&amp;L are invented.</p><div id="shadow-cards"></div></section>
+    <section class="panel shadow-results" id="shadow-aggregate" hidden><h2>Aggregate shadow research · read-only</h2><div id="shadow-aggregate-body"></div></section>
     <section class="panel"><h2>Recent activity</h2><ol id="activity"></ol></section>
-    <section class="dev" id="demo-controls"><h2>Development replay controls</h2><p class="muted">Synthetic fixtures only. These controls advance market observations; Executor decides every exit.</p>
+    <section class="dev" id="demo-controls" hidden><h2>Development replay controls</h2><p class="muted">Synthetic fixtures only. These controls advance market observations; Executor decides every exit.</p>
       <select id="fixture" aria-label="Canonical synthetic fixture" disabled></select>
       <div><button id="load" disabled>Load fixture</button><button id="advance" disabled>Advance one</button><span class="run-slot"><button id="run" disabled>Run remaining</button><button id="queue-run" hidden>Run remaining</button></span></div>
       <p class="muted" id="progress" aria-live="polite"></p>
@@ -42,6 +47,8 @@
     const ids=id=>document.getElementById(id);
     let pending=0, queue=Promise.resolve(), lastStatus=null, fetchVersion=0;
     let intentPending=false, runQueued=false;
+    let exitPending=false, emergencyLatched=false;
+    try{emergencyLatched=typeof sessionStorage!=='undefined'&&sessionStorage.getItem('mortificatio-emergency')==='1';}catch(_){/* Server latch remains authoritative. */}
     const controls=['calls','puts','load','advance','run','fixture'];
     function disableControls(){for(const name of controls)ids(name).disabled=true}
     function runControls(){
@@ -49,42 +56,80 @@
       ids('queue-run').hidden=!intentPending;
       ids('queue-run').disabled=!intentPending||runQueued;
     }
-    function processing(){disableControls();runControls();ids('state').textContent='Processing…';ids('reason').textContent='Waiting for the dry-run service';}
+    function processing(){disableControls();runControls();ids('state').textContent=emergencyLatched?'EMERGENCY EXIT PENDING':'Processing…';ids('reason').textContent=emergencyLatched?'Entries blocked; waiting for reconciled offline evidence':'Waiting for the dry-run service';}
     async function api(path,body){
       const response=await fetch(path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)});
       const data=await response.json();if(!response.ok){const error=Error(data.error||'Request blocked');error.code=data.code;error.retryable=data.retryable;throw error}return data;
     }
     function render(s){
       const observation=String(s.mode||'').startsWith('READ-ONLY');
+      const shadow=String(s.mode||'').startsWith('SHADOW');
+      emergencyLatched=emergencyLatched||Boolean(s.emergency&&s.emergency.latched)||Boolean(s.protective_exit_model&&s.protective_exit_model.emergency);
+      if(emergencyLatched){try{if(typeof sessionStorage!=='undefined')sessionStorage.setItem('mortificatio-emergency','1');}catch(_){}}
       ids('mode-banner').textContent=(s.mode||'DRY RUN / SIMULATION')+' · NO REAL ORDERS';
-      ids('mode-subtitle').textContent=observation?'Local status-only observation':'Local synthetic session';
-      ids('demo-controls').hidden=observation;
-      ids('state').textContent=pending?'Processing…':s.state;
+      ids('mode-subtitle').textContent=observation?'Local status-only observation':shadow?'Decision journal; no simulated position':'Local synthetic session';
+      ids('demo-controls').hidden=observation||shadow;
+      ids('shadow-results').hidden=!shadow;
+      ids('shadow-aggregate').hidden=!shadow;
+      ids('state').textContent=emergencyLatched?(s.state&&s.state.includes('FLAT CONFIRMED')?s.state:'EMERGENCY EXIT PENDING'):pending?'Processing…':s.state;
       ids('reason').textContent=pending?'Waiting for the dry-run service':(s.reason||'');
       ids('lifecycle').textContent='Lifecycle: '+s.lifecycle+
         (s.automation?' · '+s.automation.replaceAll('_',' '):'');
       ids('count').textContent=(s.trade_count===null?'?':s.trade_count)+'/2 trades';
-      ids('calls').disabled=ids('puts').disabled=observation||pending>0||!s.ready;
-      ids('load').disabled=ids('fixture').disabled=observation||pending>0||s.lifecycle!=='FLAT';
+      ids('calls').disabled=ids('puts').disabled=observation||emergencyLatched||pending>0||!s.ready;
+      ids('exit-all').disabled=observation||shadow||exitPending;
+      ids('exit-all').hidden=observation||shadow;
+      ids('load').disabled=ids('fixture').disabled=observation||emergencyLatched||pending>0||s.lifecycle!=='FLAT';
+      ids('protection-panel').hidden=!s.protective_exit_model;
+      if(s.protective_exit_model){const protection=s.protective_exit_model;ids('protection-status').textContent=(protection.coverage||'UNVERIFIED')+' · quantity '+(protection.quantity??'—')+' · stop premium '+(protection.stop_price??'—')+' · '+protection.phase;}
       const canAdvance=pending===0&&s.replay_index!==null&&s.replay_index<s.replay_total-1;
       ids('advance').disabled=ids('run').disabled=observation||!canAdvance;
       runControls();
       const p=s.position;ids('position-panel').hidden=!p;
       ids('position').replaceChildren();
-      if(p){for(const [label,value] of Object.entries({Direction:p.direction,Quantity:p.quantity,Strike:p.strike,'Simulated entry ask':p.simulated_entry_ask,'Entry SPX':p.entry_spx,'High-water SPX':p.high_water_spx,'Maximum favorable points':p.maximum_favorable_points,Strategy:p.strategy,'Fixed profit floor':p.fixed_profit_floor_points===null?'—':p.fixed_profit_floor_points+' points','Exit reason':p.exit_reason||'—'})){
+      if(p){for(const [label,value] of Object.entries({Direction:p.direction,Quantity:p.quantity,Strike:p.strike,'Simulated entry ask':p.simulated_entry_ask,'Initial premium stop':p.initial_stop_premium??'—','Entry SPX':p.entry_spx,'High-water SPX':p.high_water_spx,'Maximum favorable points':p.maximum_favorable_points,Strategy:p.strategy,'Early +4 / +1.25 protection':p.early_protection_active?'ACTIVE':'INACTIVE','+5 trailing':p.trailing_active?'ACTIVE':'INACTIVE','3-point trailing SPX threshold':p.trailing_threshold_spx??'—','Exit reason':p.exit_reason||'—'})){
         const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;ids('position').append(dt,dd);
       }}
       ids('activity').replaceChildren();for(const item of s.activity){const li=document.createElement('li');li.textContent=item.type+' '+Object.entries(item.detail).map(([k,v])=>k+': '+v).join(' · ');ids('activity').append(li)}
-      const select=ids('fixture'),current=select.value;select.replaceChildren();for(const name of s.fixtures){const option=document.createElement('option');option.value=name;option.textContent=name.replaceAll('_',' ');select.append(option)}select.value=current&&s.fixtures.includes(current)?current:s.fixture;
+      renderShadowResults(shadow ? (s.decisions||[]) : []);
+      renderShadowAggregate(shadow ? s.aggregate_report : null);
+      const select=ids('fixture'),current=select.value,fixtures=Array.isArray(s.fixtures)?s.fixtures:[];select.replaceChildren();for(const name of fixtures){const option=document.createElement('option');option.value=name;option.textContent=name.replaceAll('_',' ');select.append(option)}select.value=current&&fixtures.includes(current)?current:(s.fixture||'');
       ids('progress').textContent=runQueued?'Run remaining queued until the intent and status check finish':s.development_status||
         (s.replay_index===null?'No active replay':'Observation '+(s.replay_index+1)+' / '+s.replay_total);
     }
+    function renderShadowResults(decisions){
+      const host=ids('shadow-cards');host.replaceChildren();
+      if(!decisions.length){const empty=document.createElement('p');empty.className='shadow-empty';empty.textContent='No shadow decisions recorded yet.';host.append(empty);return}
+      for(const decision of decisions){
+        const card=document.createElement('article');card.className='shadow-card';
+        const meta=document.createElement('div');meta.className='shadow-meta';
+        const title=document.createElement('strong');title.textContent=decision.direction+' · '+decision.click_timestamp;
+        const evidence=decision.evidence_status||decision.data_quality||'UNVERIFIED';const quality=document.createElement('span');quality.className='quality '+(evidence==='VERIFIED'?'verified':'unverified');quality.textContent=evidence;meta.append(title,quality);card.append(meta);
+        if((decision.quality_reasons&&decision.quality_reasons.length)||evidence!=='VERIFIED'){const why=document.createElement('div');why.className='muted';why.textContent='P&L unavailable: '+((decision.quality_reasons&&decision.quality_reasons.length)?decision.quality_reasons.join(', '):'SYNTHETIC_OR_UNVERIFIED_EVIDENCE');card.append(why)}
+        const grid=document.createElement('div');grid.className='rule-grid';
+        const baseline=(decision.rules||[]).find(item=>item.policy==='BASELINE_LOCKED');
+        for(const rule of (decision.rules||[])){const box=document.createElement('div');box.className='rule';const name=document.createElement('strong');name.textContent=rule.policy;box.append(name);const lines=[['Outcome',rule.outcome],['Peak',rule.peak],['Exit trigger',rule.exit_favorable===null?'—':rule.exit_favorable],['Later recovery',rule.later_recovery_favorable===null?'—':rule.later_recovery_favorable],['Recovered',rule.recovered_after_exit?'YES':'NO'],['Option P&L',rule.option_pnl===null?'Unavailable ('+(rule.verification||'UNVERIFIED')+')':rule.option_pnl]];if(baseline&&rule!==baseline){let difference='different outcome';if(rule.exit_favorable!==null&&baseline.exit_favorable!==null){difference=(Number(rule.exit_favorable)-Number(baseline.exit_favorable)).toFixed(2)+' favorable points vs baseline'}else if(rule.outcome===baseline.outcome){difference='same outcome as baseline'}lines.push(['Difference vs baseline',difference])}for(const [label,value] of lines){const row=document.createElement('div');row.textContent=label+': '+value;box.append(row)}grid.append(box)}
+        card.append(grid);host.append(card);
+      }
+    }
+    function renderShadowAggregate(report){
+      const host=ids('shadow-aggregate-body');host.replaceChildren();
+      if(!report){const empty=document.createElement('p');empty.className='shadow-empty';empty.textContent='No aggregate report available.';host.append(empty);return}
+      const summary=document.createElement('p');summary.className='muted';summary.textContent='Entries: '+report.sample_size+' · verified: '+report.verified_cases+' · unverified: '+report.unverified_cases+' · decisive totals exclude synthetic or ambiguous evidence.';host.append(summary);
+      for(const [name,item] of Object.entries(report.policies||{})){const row=document.createElement('div');row.className='rule';const title=document.createElement('strong');title.textContent=name;row.append(title);const values=[['Decisive cases',item.decisive_cases],['Total modeled P&L',item.total_modeled_pnl===null?'Unavailable':item.total_modeled_pnl],['Worst modeled P&L',item.worst_modeled_pnl===null?'Unavailable':item.worst_modeled_pnl],['Recovered winners',item.recovered_winners],['Premature exits',item.premature_exits],['Losses worsened by waiting',item.losses_worsened_by_waiting]];for(const [label,value] of values){const cell=document.createElement('div');cell.textContent=label+': '+value;row.append(cell)}host.append(row)}
+    }
     async function refresh(){
       const version=++fetchVersion;
-      try{const r=await fetch('/api/status',{cache:'no-store'});if(!r.ok)throw Error();const status=await r.json();
+      try{const r=await fetch('/api/status',{cache:'no-store'});if(!r.ok)throw Error('HTTP status '+r.status);const status=await r.json();
         if(version!==fetchVersion)return false;
-        lastStatus=status;render(status);return true;
-      }catch{if(version===fetchVersion){disableControls();ids('state').textContent='Status unavailable';ids('error').textContent='Local service unavailable'}return false}
+        try{lastStatus=status;render(status);return true}
+        catch(error){if(version===fetchVersion)showRenderError(error);return false}
+      }catch(error){if(version===fetchVersion){disableControls();ids('mode-banner').textContent='STATUS UNAVAILABLE · NO REAL ORDERS';ids('mode-subtitle').textContent='Waiting for authoritative local status';ids('demo-controls').hidden=true;ids('shadow-results').hidden=true;ids('state').textContent='Status unavailable';ids('count').textContent='—';ids('error').textContent='Local service unavailable'}return false}
+    }
+    function showRenderError(error){
+      disableControls();ids('demo-controls').hidden=true;ids('shadow-results').hidden=true;ids('shadow-aggregate').hidden=true;ids('state').textContent='Status rendering failed';
+      const detail=error&&error.message?String(error.message).replace(/[\r\n]/g,' ').slice(0,160):'Unexpected status schema';
+      ids('mode-banner').textContent='STATUS ERROR · NO REAL ORDERS';ids('mode-subtitle').textContent='Authoritative status could not be rendered';ids('count').textContent='—';ids('error').textContent='Status rendering failed: '+detail;
     }
     function act(path,body){
       pending++;fetchVersion++;processing();
@@ -111,9 +156,12 @@
       &&Number.isInteger(s.replay_index)&&Number.isInteger(s.replay_total)
       &&s.replay_index<s.replay_total-1}
     async function intent(direction){
-      if(intentPending||pending)return;
+      if(intentPending||pending||emergencyLatched)return;
       intentPending=true;runQueued=false;
-      const outcome=await act('/api/execute',{direction,request_id:crypto.randomUUID()});
+      const shadow=String(lastStatus&&lastStatus.mode||'').startsWith('SHADOW');
+      const outcome=await act(shadow?'/api/shadow/click':'/api/execute',
+        shadow?{direction,request_id:crypto.randomUUID(),click_timestamp:new Date().toISOString()}
+              :{direction,request_id:crypto.randomUUID()});
       intentPending=false;
       if(runQueued){
         runQueued=false;
@@ -130,6 +178,16 @@
       }
       if(lastStatus)render(lastStatus);
     }
+    async function emergencyExit(){
+      if(exitPending)return;
+      exitPending=true;emergencyLatched=true;runQueued=false;fetchVersion++;processing();
+      try{if(typeof sessionStorage!=='undefined')sessionStorage.setItem('mortificatio-emergency','1');}catch(_){}
+      ids('exit-all').disabled=true;
+      try{await api('/api/exit-all',{request_id:crypto.randomUUID()});ids('error').textContent='';}
+      catch(error){ids('error').textContent='Emergency acknowledgement unavailable; entries remain blocked. '+error.message;}
+      finally{exitPending=false;const fresh=await refresh();if(!fresh){disableControls();ids('exit-all').disabled=false;ids('state').textContent='EMERGENCY ACKNOWLEDGEMENT UNKNOWN';}}
+    }
+    ids('exit-all').onclick=emergencyExit;
     ids('calls').onclick=()=>intent('CALL');ids('puts').onclick=()=>intent('PUT');
     ids('load').onclick=()=>act('/api/demo/load',{fixture:ids('fixture').value});
     ids('advance').onclick=()=>act('/api/demo/advance',{});

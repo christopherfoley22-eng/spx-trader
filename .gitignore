@@ -5,6 +5,8 @@ __pycache__/
 *.db
 *.sqlite
 *.sqlite3
+*.db-*
+*.sqlite-*
 .env
 .env.*
 *.pem
@@ -12,3 +14,29 @@ __pycache__/
 credentials*
 secrets*
 .executor-local/
+.executor-shadow/
+
+# Local runtimes, approved-download staging, dependency trees and caches.
+.venv*/
+venv/
+.runtime*/
+.phase14-approved/
+node_modules/
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+build/
+dist/
+*.log
+
+# Private diagnostics and additional database/key-container sidecars.
+.mortificatio-readonly/
+*.sqlite3-*
+*.p12
+*.pfx
+*.keystore

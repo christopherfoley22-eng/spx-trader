@@ -34,6 +34,11 @@ function flatAfterTrade() {
   };
 }
 
+function exactShadowStatus() {
+  return {mode: "SHADOW / NO ORDERS", state: "SHADOW READY", lifecycle: "SHADOW",
+    ready: true, executable: false, reason: null, decision: null, decisions: [], activity: []};
+}
+
 function node() {
   return {
     disabled: false, hidden: false, textContent: "", value: "", children: [],
@@ -123,11 +128,80 @@ async function scenario(direction, result = "flat") {
   }
 }
 
+async function shadowSchemaScenario() {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, node()); return elements.get(id); };
+  const document = {querySelector: () => ({content: "synthetic-csrf"}), getElementById: get,
+                    createElement: () => node()};
+  const fetch = async path => { assert.equal(path, "/api/status");
+    return {ok: true, json: async () => exactShadowStatus()}; };
+  vm.runInNewContext(script, {document, fetch, setInterval: () => 0,
+                              crypto: {randomUUID}, console});
+  await settle();
+  assert.equal(get("mode-banner").textContent, "SHADOW / NO ORDERS · NO REAL ORDERS");
+  assert.equal(get("mode-subtitle").textContent, "Decision journal; no simulated position");
+  assert.equal(get("state").textContent, "SHADOW READY");
+  assert.equal(get("demo-controls").hidden, true);
+  assert.equal(get("calls").disabled, false);
+  assert.equal(get("puts").disabled, false);
+  assert.equal(get("error").textContent, "");
+}
+
+async function emergencyRaceScenario() {
+  const elements = new Map();
+  const get = id => { if (!elements.has(id)) elements.set(id, node()); return elements.get(id); };
+  const requests = [];
+  const saved = new Map();
+  const sessionStorage = {getItem:key=>saved.get(key)||null,setItem:(key,value)=>saved.set(key,value)};
+  let releaseIntent;
+  const waiting = new Promise(resolve => {releaseIntent = resolve;});
+  const document = {querySelector: () => ({content: 'csrf'}), getElementById: get, createElement: () => node()};
+  const fetch = async (path, options = {}) => {
+    requests.push(path);
+    if (path === '/api/status') return {ok:true,json:async()=>status('READY')}; // Deliberately stale status.
+    if (path === '/api/execute') {await waiting;return {ok:true,json:async()=>({result:'ACCEPTED'})};}
+    if (path === '/api/exit-all') {
+      assert.ok(JSON.parse(options.body).request_id);
+      return {ok:true,json:async()=>({result:'LATCHED',emergency:{latched:true}})};
+    }
+    throw Error('Unexpected queued mutation '+path);
+  };
+  vm.runInNewContext(script,{document,fetch,sessionStorage,setInterval:()=>0,crypto:{randomUUID},console});
+  await settle();
+  const entry = get('calls').onclick();
+  await settle();
+  assert.equal(get('exit-all').disabled,false);
+  get('queue-run').onclick();
+  const emergency = get('exit-all').onclick();
+  await settle();
+  assert.equal(requests.filter(path=>path==='/api/exit-all').length,1); // Did not wait for entry.
+  assert.equal(get('calls').disabled,true);
+  assert.equal(get('puts').disabled,true);
+  assert.equal(get('state').textContent,'EMERGENCY EXIT PENDING');
+  releaseIntent();
+  await entry;await emergency;await settle();
+  assert.equal(get('calls').disabled,true); // Stale ready=true response cannot clear the latch.
+  assert.equal(requests.includes('/api/demo/run'),false);
+  get('puts').onclick();await settle();
+  assert.equal(requests.filter(path=>path==='/api/execute').length,1);
+  assert.equal(saved.get('mortificatio-emergency'),'1');
+  const reloaded = new Map();
+  const getReloaded=id=>{if(!reloaded.has(id))reloaded.set(id,node());return reloaded.get(id);};
+  const reloadDocument={querySelector:()=>({content:'csrf'}),getElementById:getReloaded,createElement:()=>node()};
+  vm.runInNewContext(script,{document:reloadDocument,fetch,sessionStorage,setInterval:()=>0,crypto:{randomUUID},console});
+  await settle();
+  assert.equal(getReloaded('calls').disabled,true);
+  assert.equal(getReloaded('puts').disabled,true);
+  assert.equal(getReloaded('state').textContent,'EMERGENCY EXIT PENDING');
+}
+
 (async () => {
   await scenario("CALL");
   await scenario("PUT");
   await scenario("CALL", "run-error");
   await scenario("CALL", "run-open");
   await scenario("PUT", "intent-error");
+  await shadowSchemaScenario();
+  await emergencyRaceScenario();
   process.stdout.write("OFFLINE UI QUEUED RUN TIMING PASS\n");
 })().catch(error => { console.error(error); process.exitCode = 1; });

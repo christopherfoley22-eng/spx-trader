@@ -9,6 +9,7 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 import math
 from threading import RLock
+from executor_contract_selection import nearby_listed_strikes
 
 from simulation_evidence import (
     EvidenceClock, EvidenceError, FeedStatus, OptionObservation, SPXObservation,
@@ -237,6 +238,52 @@ class ReadOnlyIBKREvidenceAdapter:
         with self.lock:
             self._current(generation)
             self.contract_done = True
+
+    def listed_atm_strikes(self, generation, direction, now_wall, spx_price, count=3):
+        """Read-only request planning; a strike proposal is never quote evidence."""
+        with self.lock:
+            self._current(generation)
+            if (direction not in {"CALL", "PUT"} or not self.underlying_done
+                    or not self.chain_done or not self.underlying
+                    or not isinstance(now_wall, datetime) or now_wall.tzinfo is None
+                    or not isinstance(spx_price, (int, float)) or isinstance(spx_price, bool)
+                    or not math.isfinite(spx_price) or spx_price <= 0
+                    or not isinstance(count, int) or isinstance(count, bool) or not 1 <= count <= 7):
+                raise EvidenceError("ATM security definition or request invalid")
+            from zoneinfo import ZoneInfo
+            today = now_wall.astimezone(ZoneInfo("America/New_York")).strftime("%Y%m%d")
+            strikes = {strike for _, expirations, values in self.chains
+                       if today in expirations for strike in values}
+            if not strikes:
+                raise EvidenceError("No proven current-day SPXW expiration")
+            return nearby_listed_strikes(strikes, spx_price, count)
+
+    def current_spxw_contracts(self, generation, direction, now_wall):
+        """Return completed exact identities, rejecting ambiguous conIds/strikes."""
+        with self.lock:
+            self._current(generation)
+            if (direction not in {"CALL", "PUT"} or not self.contract_done
+                    or not self.chain_done or not self.underlying_done):
+                raise EvidenceError("Exact security definition incomplete")
+            contracts, identities, strikes, all_identities = [], {}, {}, {}
+            for contract, _ in self.exact.values():
+                if (contract.con_id in all_identities
+                        and all_identities[contract.con_id] != contract):
+                    raise EvidenceError("Ambiguous exact SPXW identity")
+                all_identities[contract.con_id] = contract
+                if contract.right != {"CALL": "C", "PUT": "P"}.get(direction):
+                    continue
+                validate_contract(contract, direction, now_wall,
+                                  lambda t: any(t.strftime("%Y%m%d") in expirations
+                                                and contract.strike in values
+                                                for _, expirations, values in self.chains))
+                if (contract.con_id in identities and identities[contract.con_id] != contract
+                        or contract.strike in strikes and strikes[contract.strike] != contract.con_id):
+                    raise EvidenceError("Ambiguous exact SPXW identity")
+                identities[contract.con_id] = contract
+                strikes[contract.strike] = contract.con_id
+            contracts.extend(identities.values())
+            return tuple(sorted(contracts, key=lambda item: (item.strike, item.con_id)))
 
     def market_type(self, generation, instrument, code):
         with self.lock:

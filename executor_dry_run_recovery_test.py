@@ -122,7 +122,7 @@ with tempfile.TemporaryDirectory() as directory:
         chunk, size = s.engine.entry_chunks()[0]
         fill(s, "fill-" + intent, chunk, size)
         assert s.engine.finish_entry(s.broker(), s.mono) == "OPEN"
-        assert s.tick(-3.25) == "EXITING"
+        assert s.tick(-3.25, option_bid=6.75) == "EXITING"
         s.exit_all()
         s.restart()
     assert s.engine.status().trades_today == 2
@@ -227,14 +227,16 @@ with tempfile.TemporaryDirectory() as directory:
     s.engine._event = fail_exit
     observation = s.step(4996.75)
     try:
-        s.engine.observe("atomic-exit", observation, s.broker(), s.wall, s.mono)
+        s.engine.observe_option("atomic-exit", replace(s.options()[0], bid=6.75),
+                                s.broker(), s.wall, s.mono)
     except RuntimeError:
         pass
     else:
         raise AssertionError("Exit crash injection did not fire")
     s.restart()
     assert s.engine.status().phase == "OPEN" and s.engine.status().exit_reason is None
-    assert s.engine.observe("atomic-exit", observation, s.broker(), s.wall, s.mono) == "EXITING"
+    assert s.engine.observe_option("atomic-exit", replace(s.options()[0], bid=6.75),
+                                   s.broker(), s.wall, s.mono) == "EXITING"
     chunk, size = s.engine.next_exit_chunk(s.broker(), s.mono)
     s.engine.exit_event("atomic-exit-fill", chunk, size,
                         fill_con_id=101, snapshot=s.broker(), now_monotonic=s.mono)

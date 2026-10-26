@@ -1,0 +1,4076 @@
+{
+  "admission_cases": [
+    {
+      "buying_power": "700000",
+      "case": "capital_700000_full_125",
+      "decision": {
+        "admitted_quantities": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "binding_constraint": "FINANCIAL_OR_125_CAP",
+        "data_quality": "SOURCE_VALIDATED_CURRENT_BBO_ONLY",
+        "decision_at": "2026-10-23T14:30:00+00:00",
+        "decision_id": "388c74d7697dadf22275ca926c43aa563b564d1aa3f3e88f974bad08e93ccefb",
+        "direction": "CALL",
+        "eligible_contracts": [
+          {
+            "con_id": 105,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6000.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 106,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6005.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 107,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6012.5,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 108,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6025.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 109,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6050.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          }
+        ],
+        "estimated_entry_cost": "125081.25",
+        "existing_downside_encumbrance": "0",
+        "generation": 1,
+        "liquidity": [
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 105,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6000.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:4",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 106,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6005.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:5",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 107,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6012.5,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:6",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 108,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6025.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:7",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 109,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6050.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:8",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          }
+        ],
+        "maximum_entry_premium_cost": "127500.00",
+        "modeled_downside": "78912.50",
+        "origin": "OFFLINE_MODEL_NOT_BROKER_OBSERVATION",
+        "policy": {
+          "entry_realization": "0.8",
+          "max_model_loss": "100000",
+          "max_spread": "0.5",
+          "scenarios": [
+            {
+              "adverse_points_per_second": "0.1",
+              "adverse_premium_points": "0.1",
+              "latency_seconds": "0.1",
+              "max_loss_dollars": "100000",
+              "name": "NORMAL",
+              "retained_liquidity": "1"
+            },
+            {
+              "adverse_points_per_second": "0.5",
+              "adverse_premium_points": "3.25",
+              "latency_seconds": "0.25",
+              "max_loss_dollars": "100000",
+              "name": "STRESSED",
+              "retained_liquidity": "0.75"
+            },
+            {
+              "adverse_points_per_second": "2",
+              "adverse_premium_points": "5",
+              "latency_seconds": "0.5",
+              "max_loss_dollars": "100000",
+              "name": "SEVERE",
+              "retained_liquidity": "0.5"
+            }
+          ],
+          "version": "SYNTHETIC-REVIEW-NOT-ACCOUNT-APPROVAL"
+        },
+        "policy_version": "SYNTHETIC-REVIEW-NOT-ACCOUNT-APPROVAL",
+        "protection_feasibility": "SIMULATED_ONLY_REAL_BROKER_UNVERIFIED",
+        "reason": "FINANCIAL_OR_125_CAP",
+        "reconciliation_ref": "FIXTURE-RECON",
+        "requested_quantities": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "requested_scenario_costs": {
+          "NORMAL": {
+            "downside": "5287.50",
+            "liquidation_cost": "5287.50",
+            "residual": 0
+          },
+          "SEVERE": {
+            "downside": "78912.50",
+            "liquidation_cost": "78912.50",
+            "residual": 0
+          },
+          "STRESSED": {
+            "downside": "46100.000",
+            "liquidation_cost": "46100.000",
+            "residual": 0
+          }
+        },
+        "scenario_costs": {
+          "NORMAL": {
+            "downside": "5287.50",
+            "liquidation_cost": "5287.50",
+            "residual": 0
+          },
+          "SEVERE": {
+            "downside": "78912.50",
+            "liquidation_cost": "78912.50",
+            "residual": 0
+          },
+          "STRESSED": {
+            "downside": "46100.000",
+            "liquidation_cost": "46100.000",
+            "residual": 0
+          }
+        },
+        "status": "ADMITTED",
+        "submission_enabled": false
+      },
+      "host_elapsed_ms": 27.742727,
+      "origin": "SYNTHETIC_ASSUMPTIONS_NOT_ACCOUNT_APPROVAL",
+      "reserved_capital": "127750.00",
+      "safety_violations": 0
+    },
+    {
+      "buying_power": "700000",
+      "case": "capital_700000_risk_supports_50",
+      "decision": {
+        "admitted_quantities": [
+          25,
+          25,
+          0,
+          0,
+          0
+        ],
+        "binding_constraint": "ACCOUNT_MODELED_DOWNSIDE",
+        "data_quality": "SOURCE_VALIDATED_CURRENT_BBO_ONLY",
+        "decision_at": "2026-10-23T14:30:00+00:00",
+        "decision_id": "32f1f052268c4f417bec3524f49e794ad526fa733c4c1f0b6b6c830d5b4f3196",
+        "direction": "CALL",
+        "eligible_contracts": [
+          {
+            "con_id": 105,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6000.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 106,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6005.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 107,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6012.5,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 108,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6025.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 109,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6050.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          }
+        ],
+        "estimated_entry_cost": "50032.50",
+        "existing_downside_encumbrance": "0",
+        "generation": 1,
+        "liquidity": [
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 105,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6000.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:4",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 106,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6005.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:5",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 107,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6012.5,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:6",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 108,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6025.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:7",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 109,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6050.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:8",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          }
+        ],
+        "maximum_entry_premium_cost": "51000.00",
+        "modeled_downside": "31565.00",
+        "origin": "OFFLINE_MODEL_NOT_BROKER_OBSERVATION",
+        "policy": {
+          "entry_realization": "0.8",
+          "max_model_loss": "31565",
+          "max_spread": "0.5",
+          "scenarios": [
+            {
+              "adverse_points_per_second": "0.1",
+              "adverse_premium_points": "0.1",
+              "latency_seconds": "0.1",
+              "max_loss_dollars": "31565",
+              "name": "NORMAL",
+              "retained_liquidity": "1"
+            },
+            {
+              "adverse_points_per_second": "0.5",
+              "adverse_premium_points": "3.25",
+              "latency_seconds": "0.25",
+              "max_loss_dollars": "31565",
+              "name": "STRESSED",
+              "retained_liquidity": "0.75"
+            },
+            {
+              "adverse_points_per_second": "2",
+              "adverse_premium_points": "5",
+              "latency_seconds": "0.5",
+              "max_loss_dollars": "31565",
+              "name": "SEVERE",
+              "retained_liquidity": "0.5"
+            }
+          ],
+          "version": "SYNTHETIC-REVIEW-NOT-ACCOUNT-APPROVAL"
+        },
+        "policy_version": "SYNTHETIC-REVIEW-NOT-ACCOUNT-APPROVAL",
+        "protection_feasibility": "SIMULATED_ONLY_REAL_BROKER_UNVERIFIED",
+        "reason": "ACCOUNT_MODELED_DOWNSIDE",
+        "reconciliation_ref": "FIXTURE-RECON",
+        "requested_quantities": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "requested_scenario_costs": {
+          "NORMAL": {
+            "downside": "5287.50",
+            "liquidation_cost": "5287.50",
+            "residual": 0
+          },
+          "SEVERE": {
+            "downside": "78912.50",
+            "liquidation_cost": "78912.50",
+            "residual": 0
+          },
+          "STRESSED": {
+            "downside": "46100.000",
+            "liquidation_cost": "46100.000",
+            "residual": 0
+          }
+        },
+        "scenario_costs": {
+          "NORMAL": {
+            "downside": "2115.00",
+            "liquidation_cost": "2115.00",
+            "residual": 0
+          },
+          "SEVERE": {
+            "downside": "31565.00",
+            "liquidation_cost": "31565.00",
+            "residual": 0
+          },
+          "STRESSED": {
+            "downside": "18440.000",
+            "liquidation_cost": "18440.000",
+            "residual": 0
+          }
+        },
+        "status": "REDUCED",
+        "submission_enabled": false
+      },
+      "host_elapsed_ms": 18.519225,
+      "origin": "SYNTHETIC_ASSUMPTIONS_NOT_ACCOUNT_APPROVAL",
+      "reserved_capital": "51100.00",
+      "safety_violations": 0
+    },
+    {
+      "buying_power": "700000",
+      "case": "risk_supports_75",
+      "decision": {
+        "admitted_quantities": [
+          25,
+          25,
+          25,
+          0,
+          0
+        ],
+        "binding_constraint": "ACCOUNT_MODELED_DOWNSIDE",
+        "data_quality": "SOURCE_VALIDATED_CURRENT_BBO_ONLY",
+        "decision_at": "2026-10-23T14:30:00+00:00",
+        "decision_id": "3b5f579d74a5c477ba4d9cd7f3a549bd174644f574f59408cbdfdc45a7b441b3",
+        "direction": "CALL",
+        "eligible_contracts": [
+          {
+            "con_id": 105,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6000.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 106,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6005.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 107,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6012.5,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 108,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6025.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 109,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6050.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          }
+        ],
+        "estimated_entry_cost": "75048.75",
+        "existing_downside_encumbrance": "0",
+        "generation": 1,
+        "liquidity": [
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 105,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6000.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:4",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 106,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6005.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:5",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 107,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6012.5,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:6",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 108,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6025.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:7",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 109,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6050.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:8",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          }
+        ],
+        "maximum_entry_premium_cost": "76500.00",
+        "modeled_downside": "47347.50",
+        "origin": "OFFLINE_MODEL_NOT_BROKER_OBSERVATION",
+        "policy": {
+          "entry_realization": "0.8",
+          "max_model_loss": "47347.50",
+          "max_spread": "0.5",
+          "scenarios": [
+            {
+              "adverse_points_per_second": "0.1",
+              "adverse_premium_points": "0.1",
+              "latency_seconds": "0.1",
+              "max_loss_dollars": "47347.50",
+              "name": "NORMAL",
+              "retained_liquidity": "1"
+            },
+            {
+              "adverse_points_per_second": "0.5",
+              "adverse_premium_points": "3.25",
+              "latency_seconds": "0.25",
+              "max_loss_dollars": "47347.50",
+              "name": "STRESSED",
+              "retained_liquidity": "0.75"
+            },
+            {
+              "adverse_points_per_second": "2",
+              "adverse_premium_points": "5",
+              "latency_seconds": "0.5",
+              "max_loss_dollars": "47347.50",
+              "name": "SEVERE",
+              "retained_liquidity": "0.5"
+            }
+          ],
+          "version": "SYNTHETIC-REVIEW-NOT-ACCOUNT-APPROVAL"
+        },
+        "policy_version": "SYNTHETIC-REVIEW-NOT-ACCOUNT-APPROVAL",
+        "protection_feasibility": "SIMULATED_ONLY_REAL_BROKER_UNVERIFIED",
+        "reason": "ACCOUNT_MODELED_DOWNSIDE",
+        "reconciliation_ref": "FIXTURE-RECON",
+        "requested_quantities": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "requested_scenario_costs": {
+          "NORMAL": {
+            "downside": "5287.50",
+            "liquidation_cost": "5287.50",
+            "residual": 0
+          },
+          "SEVERE": {
+            "downside": "78912.50",
+            "liquidation_cost": "78912.50",
+            "residual": 0
+          },
+          "STRESSED": {
+            "downside": "46100.000",
+            "liquidation_cost": "46100.000",
+            "residual": 0
+          }
+        },
+        "scenario_costs": {
+          "NORMAL": {
+            "downside": "3172.50",
+            "liquidation_cost": "3172.50",
+            "residual": 0
+          },
+          "SEVERE": {
+            "downside": "47347.50",
+            "liquidation_cost": "47347.50",
+            "residual": 0
+          },
+          "STRESSED": {
+            "downside": "27660.000",
+            "liquidation_cost": "27660.000",
+            "residual": 0
+          }
+        },
+        "status": "REDUCED",
+        "submission_enabled": false
+      },
+      "host_elapsed_ms": 22.906277,
+      "origin": "SYNTHETIC_ASSUMPTIONS_NOT_ACCOUNT_APPROVAL",
+      "reserved_capital": "76650.00",
+      "safety_violations": 0
+    },
+    {
+      "buying_power": "700000",
+      "case": "atm_capacity_9",
+      "decision": {
+        "admitted_quantities": [
+          9,
+          0,
+          0,
+          0,
+          0
+        ],
+        "binding_constraint": "EXIT_CAPACITY_STRIKE_0",
+        "data_quality": "SOURCE_VALIDATED_CURRENT_BBO_ONLY",
+        "decision_at": "2026-10-23T14:30:00+00:00",
+        "decision_id": "576c201907e429a1c75e722e83e016de134bde42436d53714dcdf9271a6b49b2",
+        "direction": "CALL",
+        "eligible_contracts": [
+          {
+            "con_id": 105,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6000.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 106,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6005.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 107,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6012.5,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 108,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6025.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 109,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6050.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          }
+        ],
+        "estimated_entry_cost": "9005.85",
+        "existing_downside_encumbrance": "0",
+        "generation": 1,
+        "liquidity": [
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 105,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6000.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 18,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:4",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 18,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 9,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 13,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 106,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6005.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:5",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 107,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6012.5,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:6",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 108,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6025.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:7",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 109,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6050.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:8",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          }
+        ],
+        "maximum_entry_premium_cost": "9180.00",
+        "modeled_downside": "5681.70",
+        "origin": "OFFLINE_MODEL_NOT_BROKER_OBSERVATION",
+        "policy": {
+          "entry_realization": "0.8",
+          "max_model_loss": "100000",
+          "max_spread": "0.5",
+          "scenarios": [
+            {
+              "adverse_points_per_second": "0.1",
+              "adverse_premium_points": "0.1",
+              "latency_seconds": "0.1",
+              "max_loss_dollars": "100000",
+              "name": "NORMAL",
+              "retained_liquidity": "1"
+            },
+            {
+              "adverse_points_per_second": "0.5",
+              "adverse_premium_points": "3.25",
+              "latency_seconds": "0.25",
+              "max_loss_dollars": "100000",
+              "name": "STRESSED",
+              "retained_liquidity": "0.75"
+            },
+            {
+              "adverse_points_per_second": "2",
+              "adverse_premium_points": "5",
+              "latency_seconds": "0.5",
+              "max_loss_dollars": "100000",
+              "name": "SEVERE",
+              "retained_liquidity": "0.5"
+            }
+          ],
+          "version": "SYNTHETIC-REVIEW-NOT-ACCOUNT-APPROVAL"
+        },
+        "policy_version": "SYNTHETIC-REVIEW-NOT-ACCOUNT-APPROVAL",
+        "protection_feasibility": "SIMULATED_ONLY_REAL_BROKER_UNVERIFIED",
+        "reason": "EXIT_CAPACITY_STRIKE_0",
+        "reconciliation_ref": "FIXTURE-RECON",
+        "requested_quantities": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "requested_scenario_costs": {
+          "NORMAL": {
+            "downside": "12140.50",
+            "liquidation_cost": "12140.50",
+            "residual": 7
+          },
+          "SEVERE": {
+            "downside": "85152.50",
+            "liquidation_cost": "85152.50",
+            "residual": 16
+          },
+          "STRESSED": {
+            "downside": "53930.000",
+            "liquidation_cost": "53930.000",
+            "residual": 12
+          }
+        },
+        "scenario_costs": {
+          "NORMAL": {
+            "downside": "380.70",
+            "liquidation_cost": "380.70",
+            "residual": 0
+          },
+          "SEVERE": {
+            "downside": "5681.70",
+            "liquidation_cost": "5681.70",
+            "residual": 0
+          },
+          "STRESSED": {
+            "downside": "3319.200",
+            "liquidation_cost": "3319.200",
+            "residual": 0
+          }
+        },
+        "status": "REDUCED",
+        "submission_enabled": false
+      },
+      "host_elapsed_ms": 27.383736,
+      "origin": "SYNTHETIC_ASSUMPTIONS_NOT_ACCOUNT_APPROVAL",
+      "reserved_capital": "9198.00",
+      "safety_violations": 0
+    },
+    {
+      "buying_power": "700000",
+      "case": "entry_capacity_8",
+      "decision": {
+        "admitted_quantities": [
+          8,
+          0,
+          0,
+          0,
+          0
+        ],
+        "binding_constraint": "ENTRY_CAPACITY_STRIKE_0",
+        "data_quality": "SOURCE_VALIDATED_CURRENT_BBO_ONLY",
+        "decision_at": "2026-10-23T14:30:00+00:00",
+        "decision_id": "001b105246a23460e85f0e1e6c755a52025e062a73f1ff4b1c0acb3b6284e40c",
+        "direction": "CALL",
+        "eligible_contracts": [
+          {
+            "con_id": 105,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6000.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 106,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6005.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 107,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6012.5,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 108,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6025.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 109,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6050.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          }
+        ],
+        "estimated_entry_cost": "8005.20",
+        "existing_downside_encumbrance": "0",
+        "generation": 1,
+        "liquidity": [
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 105,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6000.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 10,
+            "displayed_bid": 100,
+            "entry_capacity": 8,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:4",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 106,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6005.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:5",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 107,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6012.5,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:6",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 108,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6025.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:7",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          },
+          {
+            "ask": "10.0",
+            "bid": "9.9",
+            "contract": {
+              "con_id": 109,
+              "currency": "USD",
+              "expiration": "20261023",
+              "multiplier": "100",
+              "right": "C",
+              "sec_type": "OPT",
+              "strike": 6050.0,
+              "symbol": "SPX",
+              "trading_class": "SPXW"
+            },
+            "displayed_ask": 100,
+            "displayed_bid": 100,
+            "entry_capacity": 80,
+            "history": "CURRENT_OBSERVATION_ONLY_NO_INFERRED_REPLENISHMENT",
+            "quote_id": "allocation-quote:8",
+            "receipt_monotonic": 100.0,
+            "scenarios": {
+              "NORMAL": {
+                "capacity": 100,
+                "modeled_exit_price": "9.79"
+              },
+              "SEVERE": {
+                "capacity": 50,
+                "modeled_exit_price": "3.9"
+              },
+              "STRESSED": {
+                "capacity": 75,
+                "modeled_exit_price": "6.525"
+              }
+            },
+            "source_time": "2026-10-23T14:30:00+00:00",
+            "source_uncertainty_seconds": "0"
+          }
+        ],
+        "maximum_entry_premium_cost": "8160.00",
+        "modeled_downside": "5050.40",
+        "origin": "OFFLINE_MODEL_NOT_BROKER_OBSERVATION",
+        "policy": {
+          "entry_realization": "0.8",
+          "max_model_loss": "100000",
+          "max_spread": "0.5",
+          "scenarios": [
+            {
+              "adverse_points_per_second": "0.1",
+              "adverse_premium_points": "0.1",
+              "latency_seconds": "0.1",
+              "max_loss_dollars": "100000",
+              "name": "NORMAL",
+              "retained_liquidity": "1"
+            },
+            {
+              "adverse_points_per_second": "0.5",
+              "adverse_premium_points": "3.25",
+              "latency_seconds": "0.25",
+              "max_loss_dollars": "100000",
+              "name": "STRESSED",
+              "retained_liquidity": "0.75"
+            },
+            {
+              "adverse_points_per_second": "2",
+              "adverse_premium_points": "5",
+              "latency_seconds": "0.5",
+              "max_loss_dollars": "100000",
+              "name": "SEVERE",
+              "retained_liquidity": "0.5"
+            }
+          ],
+          "version": "SYNTHETIC-REVIEW-NOT-ACCOUNT-APPROVAL"
+        },
+        "policy_version": "SYNTHETIC-REVIEW-NOT-ACCOUNT-APPROVAL",
+        "protection_feasibility": "SIMULATED_ONLY_REAL_BROKER_UNVERIFIED",
+        "reason": "ENTRY_CAPACITY_STRIKE_0",
+        "reconciliation_ref": "FIXTURE-RECON",
+        "requested_quantities": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "requested_scenario_costs": {
+          "NORMAL": {
+            "downside": "5287.50",
+            "liquidation_cost": "5287.50",
+            "residual": 0
+          },
+          "SEVERE": {
+            "downside": "78912.50",
+            "liquidation_cost": "78912.50",
+            "residual": 0
+          },
+          "STRESSED": {
+            "downside": "46100.000",
+            "liquidation_cost": "46100.000",
+            "residual": 0
+          }
+        },
+        "scenario_costs": {
+          "NORMAL": {
+            "downside": "338.40",
+            "liquidation_cost": "338.40",
+            "residual": 0
+          },
+          "SEVERE": {
+            "downside": "5050.40",
+            "liquidation_cost": "5050.40",
+            "residual": 0
+          },
+          "STRESSED": {
+            "downside": "2950.400",
+            "liquidation_cost": "2950.400",
+            "residual": 0
+          }
+        },
+        "status": "REDUCED",
+        "submission_enabled": false
+      },
+      "host_elapsed_ms": 25.394335,
+      "origin": "SYNTHETIC_ASSUMPTIONS_NOT_ACCOUNT_APPROVAL",
+      "reserved_capital": "8176.00",
+      "safety_violations": 0
+    },
+    {
+      "buying_power": "700000",
+      "case": "all_exit_liquidity_gone",
+      "decision": {
+        "admitted_quantities": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "binding_constraint": "MARKET_FINANCIAL_OR_IDENTITY_PREFLIGHT",
+        "data_quality": "INSUFFICIENT",
+        "decision_at": "2026-10-23T14:30:00+00:00",
+        "direction": "CALL",
+        "eligible_contracts": null,
+        "estimated_entry_cost": null,
+        "generation": 1,
+        "modeled_downside": null,
+        "origin": "OFFLINE_PREFLIGHT_FINANCIAL_SIZE_NOT_ESTABLISHED",
+        "reason": "ALLOCATION_EVIDENCE_REJECTED",
+        "requested_quantities": null,
+        "scenario_costs": null,
+        "status": "REJECTED",
+        "submission_enabled": false
+      },
+      "host_elapsed_ms": 1.830934,
+      "origin": "SYNTHETIC_ASSUMPTIONS_NOT_ACCOUNT_APPROVAL",
+      "reserved_capital": "0",
+      "safety_violations": 0
+    },
+    {
+      "buying_power": "700000",
+      "case": "protection_unverified",
+      "decision": {
+        "admitted_quantities": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "binding_constraint": null,
+        "data_quality": "INSUFFICIENT",
+        "decision_at": "2026-10-23T14:30:00+00:00",
+        "decision_id": "7011bccb7db48e8b734e39960e86344a8769666048d9b5b0065cdc6b0ba159ed",
+        "direction": "CALL",
+        "eligible_contracts": [
+          {
+            "con_id": 105,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6000.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 106,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6005.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 107,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6012.5,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 108,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6025.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 109,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6050.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          }
+        ],
+        "estimated_entry_cost": "0",
+        "generation": 1,
+        "modeled_downside": "0",
+        "origin": "OFFLINE_MODEL_NOT_BROKER_OBSERVATION",
+        "reason": "RECONCILIATION_AND_PROTECTION_FEASIBILITY_REQUIRED",
+        "requested_quantities": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "scenario_costs": {},
+        "status": "REJECTED",
+        "submission_enabled": false
+      },
+      "host_elapsed_ms": 14.773281,
+      "origin": "SYNTHETIC_ASSUMPTIONS_NOT_ACCOUNT_APPROVAL",
+      "reserved_capital": "0",
+      "safety_violations": 0
+    },
+    {
+      "buying_power": "700000",
+      "case": "reconciliation_missing",
+      "decision": {
+        "admitted_quantities": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "binding_constraint": null,
+        "data_quality": "INSUFFICIENT",
+        "decision_at": "2026-10-23T14:30:00+00:00",
+        "decision_id": "7011bccb7db48e8b734e39960e86344a8769666048d9b5b0065cdc6b0ba159ed",
+        "direction": "CALL",
+        "eligible_contracts": [
+          {
+            "con_id": 105,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6000.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 106,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6005.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 107,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6012.5,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 108,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6025.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          },
+          {
+            "con_id": 109,
+            "currency": "USD",
+            "expiration": "20261023",
+            "multiplier": "100",
+            "right": "C",
+            "sec_type": "OPT",
+            "strike": 6050.0,
+            "symbol": "SPX",
+            "trading_class": "SPXW"
+          }
+        ],
+        "estimated_entry_cost": "0",
+        "generation": 1,
+        "modeled_downside": "0",
+        "origin": "OFFLINE_MODEL_NOT_BROKER_OBSERVATION",
+        "reason": "RECONCILIATION_AND_PROTECTION_FEASIBILITY_REQUIRED",
+        "requested_quantities": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "scenario_costs": {},
+        "status": "REJECTED",
+        "submission_enabled": false
+      },
+      "host_elapsed_ms": 13.762055,
+      "origin": "SYNTHETIC_ASSUMPTIONS_NOT_ACCOUNT_APPROVAL",
+      "reserved_capital": "0",
+      "safety_violations": 0
+    }
+  ],
+  "application_samples": [
+    {
+      "auth_to_allocation_in_transaction_ms": 28.966856,
+      "background_dual_preparation_ms": 0.001074,
+      "broker_acknowledgment": "SYNCHRONOUS_FAKE_CALLBACKS_NOT_REAL_IBKR",
+      "cache_builds": 0,
+      "cache_hits": 0,
+      "capital_commit_to_adapter_ms": 339.163281,
+      "click_to_adapter_ms": 414.643494,
+      "click_to_auth_and_broker_checks_ms": 25.63421,
+      "click_to_capital_commit_ms": 75.480213,
+      "click_to_return_ms": 604.621684,
+      "continuous_exit_readiness": true,
+      "entry_fill_injection_to_confirmed_target_ms": 673.671272,
+      "execution_enabled": false,
+      "exit_event_to_adapter_ms": 197.911398,
+      "exit_event_to_confirmed_flat_ms": 1062.093846,
+      "origin": "SYNTHETIC_ONLY",
+      "prepared": false,
+      "quantity": 125,
+      "safety_violations": 0
+    },
+    {
+      "auth_to_allocation_in_transaction_ms": 19.294602,
+      "background_dual_preparation_ms": 70.160111,
+      "broker_acknowledgment": "SYNCHRONOUS_FAKE_CALLBACKS_NOT_REAL_IBKR",
+      "cache_builds": 2,
+      "cache_hits": 1,
+      "capital_commit_to_adapter_ms": 365.921942,
+      "click_to_adapter_ms": 438.817678,
+      "click_to_auth_and_broker_checks_ms": 34.685149,
+      "click_to_capital_commit_ms": 72.895736,
+      "click_to_return_ms": 671.989423,
+      "continuous_exit_readiness": true,
+      "entry_fill_injection_to_confirmed_target_ms": 603.325105,
+      "execution_enabled": false,
+      "exit_event_to_adapter_ms": 171.041322,
+      "exit_event_to_confirmed_flat_ms": 1133.166304,
+      "origin": "SYNTHETIC_ONLY",
+      "prepared": true,
+      "quantity": 125,
+      "safety_violations": 0
+    },
+    {
+      "auth_to_allocation_in_transaction_ms": 22.161257,
+      "background_dual_preparation_ms": 0.001076,
+      "broker_acknowledgment": "SYNCHRONOUS_FAKE_CALLBACKS_NOT_REAL_IBKR",
+      "cache_builds": 0,
+      "cache_hits": 0,
+      "capital_commit_to_adapter_ms": 325.328154,
+      "click_to_adapter_ms": 400.780728,
+      "click_to_auth_and_broker_checks_ms": 38.710554,
+      "click_to_capital_commit_ms": 75.452574,
+      "click_to_return_ms": 650.020395,
+      "continuous_exit_readiness": true,
+      "entry_fill_injection_to_confirmed_target_ms": 633.765587,
+      "execution_enabled": false,
+      "exit_event_to_adapter_ms": 244.631083,
+      "exit_event_to_confirmed_flat_ms": 947.67382,
+      "origin": "SYNTHETIC_ONLY",
+      "prepared": false,
+      "quantity": 125,
+      "safety_violations": 0
+    },
+    {
+      "auth_to_allocation_in_transaction_ms": 17.317691,
+      "background_dual_preparation_ms": 60.075717,
+      "broker_acknowledgment": "SYNCHRONOUS_FAKE_CALLBACKS_NOT_REAL_IBKR",
+      "cache_builds": 2,
+      "cache_hits": 1,
+      "capital_commit_to_adapter_ms": 261.670684,
+      "click_to_adapter_ms": 309.344739,
+      "click_to_auth_and_broker_checks_ms": 20.914229,
+      "click_to_capital_commit_ms": 47.674055,
+      "click_to_return_ms": 467.614219,
+      "continuous_exit_readiness": true,
+      "entry_fill_injection_to_confirmed_target_ms": 453.697488,
+      "execution_enabled": false,
+      "exit_event_to_adapter_ms": 108.774117,
+      "exit_event_to_confirmed_flat_ms": 671.154877,
+      "origin": "SYNTHETIC_ONLY",
+      "prepared": true,
+      "quantity": 125,
+      "safety_violations": 0
+    },
+    {
+      "auth_to_allocation_in_transaction_ms": 29.846833,
+      "background_dual_preparation_ms": 0.000742,
+      "broker_acknowledgment": "SYNCHRONOUS_FAKE_CALLBACKS_NOT_REAL_IBKR",
+      "cache_builds": 0,
+      "cache_hits": 0,
+      "capital_commit_to_adapter_ms": 189.716019,
+      "click_to_adapter_ms": 248.838506,
+      "click_to_auth_and_broker_checks_ms": 19.849348,
+      "click_to_capital_commit_ms": 59.122487,
+      "click_to_return_ms": 394.996033,
+      "continuous_exit_readiness": true,
+      "entry_fill_injection_to_confirmed_target_ms": 380.454253,
+      "execution_enabled": false,
+      "exit_event_to_adapter_ms": 103.874478,
+      "exit_event_to_confirmed_flat_ms": 675.012787,
+      "origin": "SYNTHETIC_ONLY",
+      "prepared": false,
+      "quantity": 125,
+      "safety_violations": 0
+    },
+    {
+      "auth_to_allocation_in_transaction_ms": 18.822239,
+      "background_dual_preparation_ms": 49.850828,
+      "broker_acknowledgment": "SYNCHRONOUS_FAKE_CALLBACKS_NOT_REAL_IBKR",
+      "cache_builds": 2,
+      "cache_hits": 1,
+      "capital_commit_to_adapter_ms": 202.494315,
+      "click_to_adapter_ms": 254.426435,
+      "click_to_auth_and_broker_checks_ms": 23.576501,
+      "click_to_capital_commit_ms": 51.93212,
+      "click_to_return_ms": 397.280458,
+      "continuous_exit_readiness": true,
+      "entry_fill_injection_to_confirmed_target_ms": 381.856826,
+      "execution_enabled": false,
+      "exit_event_to_adapter_ms": 103.194358,
+      "exit_event_to_confirmed_flat_ms": 666.267852,
+      "origin": "SYNTHETIC_ONLY",
+      "prepared": true,
+      "quantity": 125,
+      "safety_violations": 0
+    },
+    {
+      "auth_to_allocation_in_transaction_ms": 19.079138,
+      "background_dual_preparation_ms": 0.000833,
+      "broker_acknowledgment": "SYNCHRONOUS_FAKE_CALLBACKS_NOT_REAL_IBKR",
+      "cache_builds": 0,
+      "cache_hits": 0,
+      "capital_commit_to_adapter_ms": 198.415947,
+      "click_to_adapter_ms": 245.779124,
+      "click_to_auth_and_broker_checks_ms": 21.399234,
+      "click_to_capital_commit_ms": 47.363177,
+      "click_to_return_ms": 384.334677,
+      "continuous_exit_readiness": true,
+      "entry_fill_injection_to_confirmed_target_ms": 334.078103,
+      "execution_enabled": false,
+      "exit_event_to_adapter_ms": 102.238328,
+      "exit_event_to_confirmed_flat_ms": 652.901865,
+      "origin": "SYNTHETIC_ONLY",
+      "prepared": false,
+      "quantity": 125,
+      "safety_violations": 0
+    },
+    {
+      "auth_to_allocation_in_transaction_ms": 17.035012,
+      "background_dual_preparation_ms": 49.683061,
+      "broker_acknowledgment": "SYNCHRONOUS_FAKE_CALLBACKS_NOT_REAL_IBKR",
+      "cache_builds": 2,
+      "cache_hits": 1,
+      "capital_commit_to_adapter_ms": 198.506953,
+      "click_to_adapter_ms": 245.63696,
+      "click_to_auth_and_broker_checks_ms": 20.088588,
+      "click_to_capital_commit_ms": 47.130007,
+      "click_to_return_ms": 393.07968,
+      "continuous_exit_readiness": true,
+      "entry_fill_injection_to_confirmed_target_ms": 397.967794,
+      "execution_enabled": false,
+      "exit_event_to_adapter_ms": 100.979354,
+      "exit_event_to_confirmed_flat_ms": 669.709151,
+      "origin": "SYNTHETIC_ONLY",
+      "prepared": true,
+      "quantity": 125,
+      "safety_violations": 0
+    },
+    {
+      "auth_to_allocation_in_transaction_ms": 19.301219,
+      "background_dual_preparation_ms": 0.000834,
+      "broker_acknowledgment": "SYNCHRONOUS_FAKE_CALLBACKS_NOT_REAL_IBKR",
+      "cache_builds": 0,
+      "cache_hits": 0,
+      "capital_commit_to_adapter_ms": 192.21966,
+      "click_to_adapter_ms": 244.052374,
+      "click_to_auth_and_broker_checks_ms": 24.592495,
+      "click_to_capital_commit_ms": 51.832714,
+      "click_to_return_ms": 397.332238,
+      "continuous_exit_readiness": true,
+      "entry_fill_injection_to_confirmed_target_ms": 389.350949,
+      "execution_enabled": false,
+      "exit_event_to_adapter_ms": 102.228901,
+      "exit_event_to_confirmed_flat_ms": 658.12708,
+      "origin": "SYNTHETIC_ONLY",
+      "prepared": false,
+      "quantity": 125,
+      "safety_violations": 0
+    },
+    {
+      "auth_to_allocation_in_transaction_ms": 17.125703,
+      "background_dual_preparation_ms": 51.170008,
+      "broker_acknowledgment": "SYNCHRONOUS_FAKE_CALLBACKS_NOT_REAL_IBKR",
+      "cache_builds": 2,
+      "cache_hits": 1,
+      "capital_commit_to_adapter_ms": 202.16273,
+      "click_to_adapter_ms": 251.283096,
+      "click_to_auth_and_broker_checks_ms": 22.218192,
+      "click_to_capital_commit_ms": 49.120366,
+      "click_to_return_ms": 405.656858,
+      "continuous_exit_readiness": true,
+      "entry_fill_injection_to_confirmed_target_ms": 377.42997,
+      "execution_enabled": false,
+      "exit_event_to_adapter_ms": 117.115405,
+      "exit_event_to_confirmed_flat_ms": 690.259994,
+      "origin": "SYNTHETIC_ONLY",
+      "prepared": true,
+      "quantity": 125,
+      "safety_violations": 0
+    }
+  ],
+  "application_summary": {
+    "False": {
+      "auth_to_allocation_in_transaction_ms": {
+        "median": 22.161257,
+        "p95": 29.846833,
+        "p99": 29.846833,
+        "samples": 5,
+        "worst": 29.846833
+      },
+      "background_dual_preparation_ms": {
+        "median": 0.000834,
+        "p95": 0.001076,
+        "p99": 0.001076,
+        "samples": 5,
+        "worst": 0.001076
+      },
+      "capital_commit_to_adapter_ms": {
+        "median": 198.415947,
+        "p95": 339.163281,
+        "p99": 339.163281,
+        "samples": 5,
+        "worst": 339.163281
+      },
+      "click_to_adapter_ms": {
+        "median": 248.838506,
+        "p95": 414.643494,
+        "p99": 414.643494,
+        "samples": 5,
+        "worst": 414.643494
+      },
+      "click_to_auth_and_broker_checks_ms": {
+        "median": 24.592495,
+        "p95": 38.710554,
+        "p99": 38.710554,
+        "samples": 5,
+        "worst": 38.710554
+      },
+      "click_to_capital_commit_ms": {
+        "median": 59.122487,
+        "p95": 75.480213,
+        "p99": 75.480213,
+        "samples": 5,
+        "worst": 75.480213
+      },
+      "click_to_return_ms": {
+        "median": 397.332238,
+        "p95": 650.020395,
+        "p99": 650.020395,
+        "samples": 5,
+        "worst": 650.020395
+      },
+      "entry_fill_injection_to_confirmed_target_ms": {
+        "median": 389.350949,
+        "p95": 673.671272,
+        "p99": 673.671272,
+        "samples": 5,
+        "worst": 673.671272
+      },
+      "exit_event_to_adapter_ms": {
+        "median": 103.874478,
+        "p95": 244.631083,
+        "p99": 244.631083,
+        "samples": 5,
+        "worst": 244.631083
+      },
+      "exit_event_to_confirmed_flat_ms": {
+        "median": 675.012787,
+        "p95": 1062.093846,
+        "p99": 1062.093846,
+        "samples": 5,
+        "worst": 1062.093846
+      }
+    },
+    "True": {
+      "auth_to_allocation_in_transaction_ms": {
+        "median": 17.317691,
+        "p95": 19.294602,
+        "p99": 19.294602,
+        "samples": 5,
+        "worst": 19.294602
+      },
+      "background_dual_preparation_ms": {
+        "median": 51.170008,
+        "p95": 70.160111,
+        "p99": 70.160111,
+        "samples": 5,
+        "worst": 70.160111
+      },
+      "capital_commit_to_adapter_ms": {
+        "median": 202.494315,
+        "p95": 365.921942,
+        "p99": 365.921942,
+        "samples": 5,
+        "worst": 365.921942
+      },
+      "click_to_adapter_ms": {
+        "median": 254.426435,
+        "p95": 438.817678,
+        "p99": 438.817678,
+        "samples": 5,
+        "worst": 438.817678
+      },
+      "click_to_auth_and_broker_checks_ms": {
+        "median": 22.218192,
+        "p95": 34.685149,
+        "p99": 34.685149,
+        "samples": 5,
+        "worst": 34.685149
+      },
+      "click_to_capital_commit_ms": {
+        "median": 49.120366,
+        "p95": 72.895736,
+        "p99": 72.895736,
+        "samples": 5,
+        "worst": 72.895736
+      },
+      "click_to_return_ms": {
+        "median": 405.656858,
+        "p95": 671.989423,
+        "p99": 671.989423,
+        "samples": 5,
+        "worst": 671.989423
+      },
+      "entry_fill_injection_to_confirmed_target_ms": {
+        "median": 397.967794,
+        "p95": 603.325105,
+        "p99": 603.325105,
+        "samples": 5,
+        "worst": 603.325105
+      },
+      "exit_event_to_adapter_ms": {
+        "median": 108.774117,
+        "p95": 171.041322,
+        "p99": 171.041322,
+        "samples": 5,
+        "worst": 171.041322
+      },
+      "exit_event_to_confirmed_flat_ms": {
+        "median": 671.154877,
+        "p95": 1133.166304,
+        "p99": 1133.166304,
+        "samples": 5,
+        "worst": 1133.166304
+      }
+    }
+  },
+  "capacity_check_summary": {
+    "median": 3.190503,
+    "p95": 5.049632,
+    "p99": 5.647536,
+    "samples": 60,
+    "worst": 5.647536
+  },
+  "capacity_checks_ms": [
+    4.419671,
+    5.198827,
+    3.546681,
+    5.647536,
+    5.049632,
+    3.617522,
+    5.087172,
+    4.586354,
+    3.978751,
+    4.98676,
+    3.269381,
+    3.914009,
+    3.995441,
+    3.710224,
+    4.263771,
+    3.961303,
+    4.893781,
+    3.099582,
+    3.483699,
+    3.381443,
+    3.194147,
+    3.492893,
+    3.613829,
+    3.416918,
+    2.876773,
+    3.113163,
+    3.094712,
+    3.414825,
+    3.037506,
+    2.932923,
+    3.004852,
+    3.186859,
+    2.913082,
+    2.966556,
+    2.922943,
+    3.035857,
+    3.857934,
+    3.713408,
+    3.788236,
+    3.674497,
+    3.416491,
+    2.952968,
+    2.927674,
+    2.922889,
+    2.973686,
+    2.968338,
+    2.909125,
+    2.856018,
+    2.955454,
+    3.118329,
+    2.954266,
+    3.107702,
+    2.969298,
+    2.958355,
+    3.282609,
+    3.172737,
+    3.051789,
+    2.912049,
+    3.182952,
+    3.042183
+  ],
+  "clock": "perf_counter_ns",
+  "comparison_limit": "Equivalent ledger fixtures, different uncontrolled load; application N5/path descriptive only; one exit sample profiled and retained.",
+  "complete": true,
+  "economic_findings": "Admission is a conditional downside model, not realized P&L or guaranteed liquidation. No order-slicing advantage established.",
+  "execution_enabled": false,
+  "exit_profile_top_cumulative_seconds": [
+    {
+      "calls": 4,
+      "cumulative_seconds": 0.031333111000000004,
+      "file": "executor_broker_snapshot.py",
+      "function": "locked",
+      "line": 38,
+      "self_seconds": 3.4709e-05
+    },
+    {
+      "calls": 25,
+      "cumulative_seconds": 0.021544773,
+      "file": "~",
+      "function": "<built-in method builtins.next>",
+      "line": 0,
+      "self_seconds": 9.422e-05
+    },
+    {
+      "calls": 1,
+      "cumulative_seconds": 0.019243775,
+      "file": "executor_liquidity_benchmark.py",
+      "function": "sync",
+      "line": 90,
+      "self_seconds": 8.2212e-05
+    },
+    {
+      "calls": 6,
+      "cumulative_seconds": 0.017095626000000003,
+      "file": "executor_offline_fixture.py",
+      "function": "db",
+      "line": 50,
+      "self_seconds": 5.0186000000000004e-05
+    },
+    {
+      "calls": 7,
+      "cumulative_seconds": 0.015721244000000002,
+      "file": "contextlib.py",
+      "function": "__exit__",
+      "line": 121,
+      "self_seconds": 3.9493e-05
+    },
+    {
+      "calls": 7,
+      "cumulative_seconds": 0.012271773000000001,
+      "file": "~",
+      "function": "<method 'close' of 'sqlite3.Connection' objects>",
+      "line": 0,
+      "self_seconds": 0.012271773000000001
+    },
+    {
+      "calls": 1,
+      "cumulative_seconds": 0.010968949,
+      "file": "executor_portfolio.py",
+      "function": "reconcile",
+      "line": 424,
+      "self_seconds": 1.8469000000000002e-05
+    },
+    {
+      "calls": 1,
+      "cumulative_seconds": 0.010864872000000001,
+      "file": "executor_portfolio.py",
+      "function": "schedule",
+      "line": 481,
+      "self_seconds": 3.067e-05
+    },
+    {
+      "calls": 6,
+      "cumulative_seconds": 0.010857927,
+      "file": "executor_readiness_benchmark.py",
+      "function": "append",
+      "line": 34,
+      "self_seconds": 2.2655000000000002e-05
+    },
+    {
+      "calls": 6,
+      "cumulative_seconds": 0.01083253,
+      "file": "executor_portfolio.py",
+      "function": "_append",
+      "line": 70,
+      "self_seconds": 0.000145083
+    },
+    {
+      "calls": 1,
+      "cumulative_seconds": 0.010272495000000001,
+      "file": "executor_liquidity_simulator.py",
+      "function": "bindings",
+      "line": 100,
+      "self_seconds": 3.2031e-05
+    },
+    {
+      "calls": 1,
+      "cumulative_seconds": 0.009835845000000001,
+      "file": "executor_paper_reconciliation.py",
+      "function": "_reconcile_snapshot",
+      "line": 27,
+      "self_seconds": 0.000168266
+    },
+    {
+      "calls": 1,
+      "cumulative_seconds": 0.009314457,
+      "file": "executor_liquidation.py",
+      "function": "plan",
+      "line": 221,
+      "self_seconds": 0.00027268
+    },
+    {
+      "calls": 6,
+      "cumulative_seconds": 0.009206319000000001,
+      "file": "executor_paper_broker.py",
+      "function": "_append",
+      "line": 160,
+      "self_seconds": 0.00010596200000000001
+    },
+    {
+      "calls": 25,
+      "cumulative_seconds": 0.008547915,
+      "file": "executor_portfolio.py",
+      "function": "_assess",
+      "line": 465,
+      "self_seconds": 0.00018921400000000002
+    },
+    {
+      "calls": 66,
+      "cumulative_seconds": 0.007911256,
+      "file": "~",
+      "function": "<method 'execute' of 'sqlite3.Connection' objects>",
+      "line": 0,
+      "self_seconds": 0.007911256
+    },
+    {
+      "calls": 25,
+      "cumulative_seconds": 0.0072330630000000005,
+      "file": "executor_portfolio_liquidity.py",
+      "function": "assess_liquidity",
+      "line": 75,
+      "self_seconds": 0.0006378600000000001
+    },
+    {
+      "calls": 1,
+      "cumulative_seconds": 0.006657215,
+      "file": "executor_offline_fixture.py",
+      "function": "snapshot",
+      "line": 137,
+      "self_seconds": 6.5058e-05
+    },
+    {
+      "calls": 1,
+      "cumulative_seconds": 0.006521846,
+      "file": "executor_portfolio.py",
+      "function": "dispatch_batch",
+      "line": 432,
+      "self_seconds": 7.5284e-05
+    },
+    {
+      "calls": 7,
+      "cumulative_seconds": 0.005866263,
+      "file": "contextlib.py",
+      "function": "__enter__",
+      "line": 112,
+      "self_seconds": 1.6336e-05
+    },
+    {
+      "calls": 3207,
+      "cumulative_seconds": 0.005797139000000001,
+      "file": "copy.py",
+      "function": "deepcopy",
+      "line": 128,
+      "self_seconds": 0.0032023370000000004
+    },
+    {
+      "calls": 25,
+      "cumulative_seconds": 0.005388245000000001,
+      "file": "simulation_evidence.py",
+      "function": "validate_option_risk",
+      "line": 200,
+      "self_seconds": 0.00015916700000000002
+    },
+    {
+      "calls": 25,
+      "cumulative_seconds": 0.005032254,
+      "file": "simulation_evidence.py",
+      "function": "validate_contract",
+      "line": 117,
+      "self_seconds": 0.00014597200000000002
+    },
+    {
+      "calls": 6,
+      "cumulative_seconds": 0.0049737570000000005,
+      "file": "executor_portfolio.py",
+      "function": "_rollback_snapshot",
+      "line": 62,
+      "self_seconds": 4.1089000000000006e-05
+    },
+    {
+      "calls": 1,
+      "cumulative_seconds": 0.0048788880000000005,
+      "file": "executor_paper_broker.py",
+      "function": "_rollback_snapshot",
+      "line": 157,
+      "self_seconds": 4.048e-06
+    },
+    {
+      "calls": 152,
+      "cumulative_seconds": 0.00487101,
+      "file": "copy.py",
+      "function": "_deepcopy_dict",
+      "line": 226,
+      "self_seconds": 0.0009105820000000001
+    },
+    {
+      "calls": 25,
+      "cumulative_seconds": 0.004765348,
+      "file": "~",
+      "function": "<method 'strftime' of 'datetime.date' objects>",
+      "line": 0,
+      "self_seconds": 0.004765348
+    },
+    {
+      "calls": 4,
+      "cumulative_seconds": 0.004709818,
+      "file": "executor_portfolio.py",
+      "function": "_sync_emergency",
+      "line": 400,
+      "self_seconds": 1.1857e-05
+    },
+    {
+      "calls": 4,
+      "cumulative_seconds": 0.004696154,
+      "file": "executor_emergency.py",
+      "function": "blocked",
+      "line": 50,
+      "self_seconds": 1.4722e-05
+    },
+    {
+      "calls": 4,
+      "cumulative_seconds": 0.004681432,
+      "file": "executor_emergency.py",
+      "function": "status",
+      "line": 44,
+      "self_seconds": 3.9781000000000004e-05
+    }
+  ],
+  "exit_samples": [
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.699909,
+        "receipt_to_adapter_ms": 49.921712,
+        "receipt_to_trigger_ms": 2.300865,
+        "reservation_to_adapter_ms": 37.549291,
+        "reservation_to_final_validation_ms": 24.559396,
+        "selected_to_reservation_ms": 5.48915,
+        "trigger_to_adapter_ms": 47.620847,
+        "trigger_to_prepared_ms": 11.54585,
+        "trigger_to_selected_ms": 4.582406
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 0,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.413877,
+        "receipt_to_adapter_ms": 40.868282,
+        "receipt_to_trigger_ms": 2.117352,
+        "reservation_to_adapter_ms": 30.87495,
+        "reservation_to_final_validation_ms": 20.810895,
+        "selected_to_reservation_ms": 4.015453,
+        "trigger_to_adapter_ms": 38.75093,
+        "trigger_to_prepared_ms": 8.935351,
+        "trigger_to_selected_ms": 3.860527
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 1,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.088489,
+        "receipt_to_adapter_ms": 39.76952,
+        "receipt_to_trigger_ms": 1.394692,
+        "reservation_to_adapter_ms": 30.409578,
+        "reservation_to_final_validation_ms": 18.34827,
+        "selected_to_reservation_ms": 4.974507,
+        "trigger_to_adapter_ms": 38.374828,
+        "trigger_to_prepared_ms": 9.139844,
+        "trigger_to_selected_ms": 2.990743
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 2,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.10743,
+        "receipt_to_adapter_ms": 37.85341,
+        "receipt_to_trigger_ms": 1.590317,
+        "reservation_to_adapter_ms": 29.034058,
+        "reservation_to_final_validation_ms": 17.177224,
+        "selected_to_reservation_ms": 4.002477,
+        "trigger_to_adapter_ms": 36.263093,
+        "trigger_to_prepared_ms": 8.320544,
+        "trigger_to_selected_ms": 3.226558
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 3,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.574681,
+        "receipt_to_adapter_ms": 40.117666,
+        "receipt_to_trigger_ms": 1.676704,
+        "reservation_to_adapter_ms": 31.150156,
+        "reservation_to_final_validation_ms": 20.426852,
+        "selected_to_reservation_ms": 3.932141,
+        "trigger_to_adapter_ms": 38.440962,
+        "trigger_to_prepared_ms": 8.463426,
+        "trigger_to_selected_ms": 3.358665
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 4,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.808618,
+        "receipt_to_adapter_ms": 38.975225,
+        "receipt_to_trigger_ms": 1.500402,
+        "reservation_to_adapter_ms": 30.936268,
+        "reservation_to_final_validation_ms": 16.439164,
+        "selected_to_reservation_ms": 3.442256,
+        "trigger_to_adapter_ms": 37.474823,
+        "trigger_to_prepared_ms": 7.67679,
+        "trigger_to_selected_ms": 3.096299
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 5,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.859964,
+        "receipt_to_adapter_ms": 37.556625,
+        "receipt_to_trigger_ms": 1.306106,
+        "reservation_to_adapter_ms": 29.85616,
+        "reservation_to_final_validation_ms": 19.566705,
+        "selected_to_reservation_ms": 3.667926,
+        "trigger_to_adapter_ms": 36.250519,
+        "trigger_to_prepared_ms": 7.597306,
+        "trigger_to_selected_ms": 2.726433
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 6,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.463332,
+        "receipt_to_adapter_ms": 39.576857,
+        "receipt_to_trigger_ms": 1.577277,
+        "reservation_to_adapter_ms": 30.432895,
+        "reservation_to_final_validation_ms": 19.762561,
+        "selected_to_reservation_ms": 3.937608,
+        "trigger_to_adapter_ms": 37.99958,
+        "trigger_to_prepared_ms": 8.643497,
+        "trigger_to_selected_ms": 3.629077
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 7,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.986872,
+        "receipt_to_adapter_ms": 38.250881,
+        "receipt_to_trigger_ms": 1.514815,
+        "reservation_to_adapter_ms": 30.059198,
+        "reservation_to_final_validation_ms": 18.229211,
+        "selected_to_reservation_ms": 3.584989,
+        "trigger_to_adapter_ms": 36.736066,
+        "trigger_to_prepared_ms": 7.836871,
+        "trigger_to_selected_ms": 3.091879
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 8,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.887959,
+        "receipt_to_adapter_ms": 38.057418,
+        "receipt_to_trigger_ms": 1.306331,
+        "reservation_to_adapter_ms": 30.260917,
+        "reservation_to_final_validation_ms": 17.88607,
+        "selected_to_reservation_ms": 3.648966,
+        "trigger_to_adapter_ms": 36.751087,
+        "trigger_to_prepared_ms": 7.632036,
+        "trigger_to_selected_ms": 2.841204
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 9,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.324495,
+        "receipt_to_adapter_ms": 37.949847,
+        "receipt_to_trigger_ms": 1.372087,
+        "reservation_to_adapter_ms": 30.286441,
+        "reservation_to_final_validation_ms": 19.734566,
+        "selected_to_reservation_ms": 3.431032,
+        "trigger_to_adapter_ms": 36.57776,
+        "trigger_to_prepared_ms": 7.462545,
+        "trigger_to_selected_ms": 2.860287
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 10,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.716519,
+        "receipt_to_adapter_ms": 40.95501,
+        "receipt_to_trigger_ms": 1.514652,
+        "reservation_to_adapter_ms": 32.91141,
+        "reservation_to_final_validation_ms": 18.766988,
+        "selected_to_reservation_ms": 3.377909,
+        "trigger_to_adapter_ms": 39.440358,
+        "trigger_to_prepared_ms": 7.761229,
+        "trigger_to_selected_ms": 3.151039
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 11,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.261275,
+        "receipt_to_adapter_ms": 40.232507,
+        "receipt_to_trigger_ms": 1.869327,
+        "reservation_to_adapter_ms": 31.097358,
+        "reservation_to_final_validation_ms": 20.678221,
+        "selected_to_reservation_ms": 3.975932,
+        "trigger_to_adapter_ms": 38.36318,
+        "trigger_to_prepared_ms": 8.344119,
+        "trigger_to_selected_ms": 3.28989
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 12,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.21544,
+        "receipt_to_adapter_ms": 37.795072,
+        "receipt_to_trigger_ms": 1.468721,
+        "reservation_to_adapter_ms": 29.073808,
+        "reservation_to_final_validation_ms": 18.752085,
+        "selected_to_reservation_ms": 4.306396,
+        "trigger_to_adapter_ms": 36.326351,
+        "trigger_to_prepared_ms": 8.315101,
+        "trigger_to_selected_ms": 2.946147
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 13,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.97454,
+        "receipt_to_adapter_ms": 37.330572,
+        "receipt_to_trigger_ms": 1.805202,
+        "reservation_to_adapter_ms": 28.651785,
+        "reservation_to_final_validation_ms": 17.422032,
+        "selected_to_reservation_ms": 3.73856,
+        "trigger_to_adapter_ms": 35.52537,
+        "trigger_to_prepared_ms": 8.002509,
+        "trigger_to_selected_ms": 3.135025
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 14,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.405192,
+        "receipt_to_adapter_ms": 41.491164,
+        "receipt_to_trigger_ms": 1.8706,
+        "reservation_to_adapter_ms": 31.176642,
+        "reservation_to_final_validation_ms": 19.025163,
+        "selected_to_reservation_ms": 4.161923,
+        "trigger_to_adapter_ms": 39.620564,
+        "trigger_to_prepared_ms": 9.562758,
+        "trigger_to_selected_ms": 4.281999
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 15,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.176193,
+        "receipt_to_adapter_ms": 37.430118,
+        "receipt_to_trigger_ms": 1.35148,
+        "reservation_to_adapter_ms": 29.519,
+        "reservation_to_final_validation_ms": 19.559165,
+        "selected_to_reservation_ms": 3.604959,
+        "trigger_to_adapter_ms": 36.078638,
+        "trigger_to_prepared_ms": 7.828041,
+        "trigger_to_selected_ms": 2.954679
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 16,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.75698,
+        "receipt_to_adapter_ms": 36.292592,
+        "receipt_to_trigger_ms": 1.308417,
+        "reservation_to_adapter_ms": 28.44298,
+        "reservation_to_final_validation_ms": 15.907789,
+        "selected_to_reservation_ms": 3.578228,
+        "trigger_to_adapter_ms": 34.984175,
+        "trigger_to_prepared_ms": 7.554819,
+        "trigger_to_selected_ms": 2.962967
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 17,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.604565,
+        "receipt_to_adapter_ms": 47.849035,
+        "receipt_to_trigger_ms": 1.945352,
+        "reservation_to_adapter_ms": 38.075188,
+        "reservation_to_final_validation_ms": 28.683978,
+        "selected_to_reservation_ms": 4.04216,
+        "trigger_to_adapter_ms": 45.903683,
+        "trigger_to_prepared_ms": 9.031035,
+        "trigger_to_selected_ms": 3.786335
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 18,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.902668,
+        "receipt_to_adapter_ms": 39.066849,
+        "receipt_to_trigger_ms": 3.175996,
+        "reservation_to_adapter_ms": 29.186113,
+        "reservation_to_final_validation_ms": 17.950313,
+        "selected_to_reservation_ms": 3.404922,
+        "trigger_to_adapter_ms": 35.890853,
+        "trigger_to_prepared_ms": 7.738773,
+        "trigger_to_selected_ms": 3.299818
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 19,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.337068,
+        "receipt_to_adapter_ms": 54.696422,
+        "receipt_to_trigger_ms": 2.032069,
+        "reservation_to_adapter_ms": 39.523942,
+        "reservation_to_final_validation_ms": 22.290106,
+        "selected_to_reservation_ms": 9.663933,
+        "trigger_to_adapter_ms": 52.664353,
+        "trigger_to_prepared_ms": 14.517253,
+        "trigger_to_selected_ms": 3.476478
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 20,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.451813,
+        "receipt_to_adapter_ms": 40.212787,
+        "receipt_to_trigger_ms": 1.518024,
+        "reservation_to_adapter_ms": 30.279168,
+        "reservation_to_final_validation_ms": 18.195451,
+        "selected_to_reservation_ms": 4.20375,
+        "trigger_to_adapter_ms": 38.694763,
+        "trigger_to_prepared_ms": 9.556777,
+        "trigger_to_selected_ms": 4.211845
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 21,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.095026,
+        "receipt_to_adapter_ms": 39.371907,
+        "receipt_to_trigger_ms": 1.391605,
+        "reservation_to_adapter_ms": 31.577522,
+        "reservation_to_final_validation_ms": 19.412553,
+        "selected_to_reservation_ms": 3.500359,
+        "trigger_to_adapter_ms": 37.980302,
+        "trigger_to_prepared_ms": 7.547114,
+        "trigger_to_selected_ms": 2.902421
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 22,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.613365,
+        "receipt_to_adapter_ms": 40.819231,
+        "receipt_to_trigger_ms": 1.500359,
+        "reservation_to_adapter_ms": 32.406557,
+        "reservation_to_final_validation_ms": 21.063262,
+        "selected_to_reservation_ms": 3.548902,
+        "trigger_to_adapter_ms": 39.318872,
+        "trigger_to_prepared_ms": 8.014936,
+        "trigger_to_selected_ms": 3.363413
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 23,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.843435,
+        "receipt_to_adapter_ms": 42.167094,
+        "receipt_to_trigger_ms": 1.386376,
+        "reservation_to_adapter_ms": 32.327349,
+        "reservation_to_final_validation_ms": 18.880545,
+        "selected_to_reservation_ms": 4.321391,
+        "trigger_to_adapter_ms": 40.780718,
+        "trigger_to_prepared_ms": 9.663631,
+        "trigger_to_selected_ms": 4.131978
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 24,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.297003,
+        "receipt_to_adapter_ms": 37.377142,
+        "receipt_to_trigger_ms": 1.49811,
+        "reservation_to_adapter_ms": 29.297776,
+        "reservation_to_final_validation_ms": 18.945171,
+        "selected_to_reservation_ms": 3.622941,
+        "trigger_to_adapter_ms": 35.879032,
+        "trigger_to_prepared_ms": 7.724707,
+        "trigger_to_selected_ms": 2.958315
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 25,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.048371,
+        "receipt_to_adapter_ms": 43.106054,
+        "receipt_to_trigger_ms": 1.487349,
+        "reservation_to_adapter_ms": 32.193972,
+        "reservation_to_final_validation_ms": 21.801908,
+        "selected_to_reservation_ms": 4.943206,
+        "trigger_to_adapter_ms": 41.618705,
+        "trigger_to_prepared_ms": 10.58443,
+        "trigger_to_selected_ms": 4.481527
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 26,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.805173,
+        "receipt_to_adapter_ms": 36.697104,
+        "receipt_to_trigger_ms": 1.511565,
+        "reservation_to_adapter_ms": 27.895188,
+        "reservation_to_final_validation_ms": 15.519676,
+        "selected_to_reservation_ms": 3.584108,
+        "trigger_to_adapter_ms": 35.185539,
+        "trigger_to_prepared_ms": 8.544489,
+        "trigger_to_selected_ms": 3.706243
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 27,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.042395,
+        "receipt_to_adapter_ms": 37.450557,
+        "receipt_to_trigger_ms": 1.513821,
+        "reservation_to_adapter_ms": 28.903244,
+        "reservation_to_final_validation_ms": 16.421715,
+        "selected_to_reservation_ms": 3.879277,
+        "trigger_to_adapter_ms": 35.936736,
+        "trigger_to_prepared_ms": 8.127936,
+        "trigger_to_selected_ms": 3.154215
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 28,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.957839,
+        "receipt_to_adapter_ms": 35.422904,
+        "receipt_to_trigger_ms": 1.650554,
+        "reservation_to_adapter_ms": 26.782793,
+        "reservation_to_final_validation_ms": 17.541929,
+        "selected_to_reservation_ms": 3.896925,
+        "trigger_to_adapter_ms": 33.77235,
+        "trigger_to_prepared_ms": 7.915752,
+        "trigger_to_selected_ms": 3.092632
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 29,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.043312,
+        "receipt_to_adapter_ms": 32.425358,
+        "receipt_to_trigger_ms": 1.329804,
+        "reservation_to_adapter_ms": 24.525755,
+        "reservation_to_final_validation_ms": 15.393878,
+        "selected_to_reservation_ms": 3.754121,
+        "trigger_to_adapter_ms": 31.095554,
+        "trigger_to_prepared_ms": 7.678609,
+        "trigger_to_selected_ms": 2.815678
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 30,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.161527,
+        "receipt_to_adapter_ms": 40.37351,
+        "receipt_to_trigger_ms": 1.609742,
+        "reservation_to_adapter_ms": 30.336412,
+        "reservation_to_final_validation_ms": 18.150976,
+        "selected_to_reservation_ms": 4.131037,
+        "trigger_to_adapter_ms": 38.763768,
+        "trigger_to_prepared_ms": 9.688919,
+        "trigger_to_selected_ms": 4.296319
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 31,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.481135,
+        "receipt_to_adapter_ms": 39.785978,
+        "receipt_to_trigger_ms": 1.769444,
+        "reservation_to_adapter_ms": 31.095555,
+        "reservation_to_final_validation_ms": 18.858214,
+        "selected_to_reservation_ms": 3.771316,
+        "trigger_to_adapter_ms": 38.016534,
+        "trigger_to_prepared_ms": 7.976104,
+        "trigger_to_selected_ms": 3.149663
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 32,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.094626,
+        "receipt_to_adapter_ms": 42.976285,
+        "receipt_to_trigger_ms": 1.655573,
+        "reservation_to_adapter_ms": 34.807738,
+        "reservation_to_final_validation_ms": 23.669187,
+        "selected_to_reservation_ms": 3.280468,
+        "trigger_to_adapter_ms": 41.320712,
+        "trigger_to_prepared_ms": 7.50607,
+        "trigger_to_selected_ms": 3.232506
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 33,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.660326,
+        "receipt_to_adapter_ms": 44.59495,
+        "receipt_to_trigger_ms": 1.577112,
+        "reservation_to_adapter_ms": 36.251615,
+        "reservation_to_final_validation_ms": 20.254441,
+        "selected_to_reservation_ms": 3.579931,
+        "trigger_to_adapter_ms": 43.017838,
+        "trigger_to_prepared_ms": 7.887733,
+        "trigger_to_selected_ms": 3.186292
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 34,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.220564,
+        "receipt_to_adapter_ms": 41.889546,
+        "receipt_to_trigger_ms": 1.870491,
+        "reservation_to_adapter_ms": 31.511357,
+        "reservation_to_final_validation_ms": 19.155664,
+        "selected_to_reservation_ms": 4.753146,
+        "trigger_to_adapter_ms": 40.019055,
+        "trigger_to_prepared_ms": 9.603938,
+        "trigger_to_selected_ms": 3.754552
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 35,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.399535,
+        "receipt_to_adapter_ms": 38.551721,
+        "receipt_to_trigger_ms": 1.853573,
+        "reservation_to_adapter_ms": 29.227199,
+        "reservation_to_final_validation_ms": 19.529616,
+        "selected_to_reservation_ms": 4.103169,
+        "trigger_to_adapter_ms": 36.698148,
+        "trigger_to_prepared_ms": 8.51879,
+        "trigger_to_selected_ms": 3.36778
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 36,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.031051,
+        "receipt_to_adapter_ms": 38.271614,
+        "receipt_to_trigger_ms": 2.527976,
+        "reservation_to_adapter_ms": 28.77558,
+        "reservation_to_final_validation_ms": 16.938762,
+        "selected_to_reservation_ms": 3.528983,
+        "trigger_to_adapter_ms": 35.743638,
+        "trigger_to_prepared_ms": 7.99624,
+        "trigger_to_selected_ms": 3.439075
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 37,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.985787,
+        "receipt_to_adapter_ms": 40.864665,
+        "receipt_to_trigger_ms": 1.552373,
+        "reservation_to_adapter_ms": 31.690341,
+        "reservation_to_final_validation_ms": 18.979895,
+        "selected_to_reservation_ms": 3.918183,
+        "trigger_to_adapter_ms": 39.312292,
+        "trigger_to_prepared_ms": 8.79721,
+        "trigger_to_selected_ms": 3.703768
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 38,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.872499,
+        "receipt_to_adapter_ms": 39.878814,
+        "receipt_to_trigger_ms": 1.612309,
+        "reservation_to_adapter_ms": 30.251097,
+        "reservation_to_final_validation_ms": 17.041716,
+        "selected_to_reservation_ms": 4.257198,
+        "trigger_to_adapter_ms": 38.266505,
+        "trigger_to_prepared_ms": 9.325431,
+        "trigger_to_selected_ms": 3.75821
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 39,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.057762,
+        "receipt_to_adapter_ms": 37.813257,
+        "receipt_to_trigger_ms": 1.667534,
+        "reservation_to_adapter_ms": 29.403243,
+        "reservation_to_final_validation_ms": 18.53258,
+        "selected_to_reservation_ms": 3.484071,
+        "trigger_to_adapter_ms": 36.145723,
+        "trigger_to_prepared_ms": 7.877192,
+        "trigger_to_selected_ms": 3.258409
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 40,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.98644,
+        "receipt_to_adapter_ms": 37.532124,
+        "receipt_to_trigger_ms": 1.504466,
+        "reservation_to_adapter_ms": 29.417687,
+        "reservation_to_final_validation_ms": 17.920979,
+        "selected_to_reservation_ms": 3.460919,
+        "trigger_to_adapter_ms": 36.027658,
+        "trigger_to_prepared_ms": 7.513435,
+        "trigger_to_selected_ms": 3.149052
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 41,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.272558,
+        "receipt_to_adapter_ms": 41.161692,
+        "receipt_to_trigger_ms": 1.493504,
+        "reservation_to_adapter_ms": 33.226539,
+        "reservation_to_final_validation_ms": 18.459662,
+        "selected_to_reservation_ms": 3.311787,
+        "trigger_to_adapter_ms": 39.668188,
+        "trigger_to_prepared_ms": 7.484657,
+        "trigger_to_selected_ms": 3.129862
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 42,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.96734,
+        "receipt_to_adapter_ms": 43.18886,
+        "receipt_to_trigger_ms": 1.931705,
+        "reservation_to_adapter_ms": 31.887918,
+        "reservation_to_final_validation_ms": 20.209103,
+        "selected_to_reservation_ms": 3.621244,
+        "trigger_to_adapter_ms": 41.257155,
+        "trigger_to_prepared_ms": 10.169353,
+        "trigger_to_selected_ms": 5.747993
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 43,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.972706,
+        "receipt_to_adapter_ms": 36.835727,
+        "receipt_to_trigger_ms": 1.316537,
+        "reservation_to_adapter_ms": 28.732438,
+        "reservation_to_final_validation_ms": 14.069651,
+        "selected_to_reservation_ms": 3.706842,
+        "trigger_to_adapter_ms": 35.51919,
+        "trigger_to_prepared_ms": 7.883468,
+        "trigger_to_selected_ms": 3.07991
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 44,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 1.762412,
+        "receipt_to_adapter_ms": 74.528913,
+        "receipt_to_trigger_ms": 2.587321,
+        "reservation_to_adapter_ms": 52.44121,
+        "reservation_to_final_validation_ms": 29.732951,
+        "selected_to_reservation_ms": 12.17336,
+        "trigger_to_adapter_ms": 71.941592,
+        "trigger_to_prepared_ms": 20.928832,
+        "trigger_to_selected_ms": 7.327022
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 45,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.576292,
+        "receipt_to_adapter_ms": 58.35438,
+        "receipt_to_trigger_ms": 3.792084,
+        "reservation_to_adapter_ms": 43.369587,
+        "reservation_to_final_validation_ms": 27.656077,
+        "selected_to_reservation_ms": 4.163922,
+        "trigger_to_adapter_ms": 54.562296,
+        "trigger_to_prepared_ms": 14.781717,
+        "trigger_to_selected_ms": 7.028787
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 46,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.195338,
+        "receipt_to_adapter_ms": 60.152499,
+        "receipt_to_trigger_ms": 1.973071,
+        "reservation_to_adapter_ms": 47.579215,
+        "reservation_to_final_validation_ms": 26.983231,
+        "selected_to_reservation_ms": 5.324313,
+        "trigger_to_adapter_ms": 58.179428,
+        "trigger_to_prepared_ms": 13.701094,
+        "trigger_to_selected_ms": 5.2759
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 47,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.335359,
+        "receipt_to_adapter_ms": 54.477574,
+        "receipt_to_trigger_ms": 1.815224,
+        "reservation_to_adapter_ms": 43.151106,
+        "reservation_to_final_validation_ms": 30.465259,
+        "selected_to_reservation_ms": 4.304037,
+        "trigger_to_adapter_ms": 52.66235,
+        "trigger_to_prepared_ms": 10.584082,
+        "trigger_to_selected_ms": 5.207207
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 48,
+      "workload": "WARM"
+    },
+    {
+      "actual_fills": 0,
+      "cache_hits": 5,
+      "cache_misses": 0,
+      "execution_enabled": false,
+      "metrics": {
+        "independent_validation_ms": 2.225374,
+        "receipt_to_adapter_ms": 50.492408,
+        "receipt_to_trigger_ms": 1.317578,
+        "reservation_to_adapter_ms": 41.660721,
+        "reservation_to_final_validation_ms": 29.345627,
+        "selected_to_reservation_ms": 4.612093,
+        "trigger_to_adapter_ms": 49.17483,
+        "trigger_to_prepared_ms": 8.39689,
+        "trigger_to_selected_ms": 2.902016
+      },
+      "mode": "NORMAL",
+      "origin": "SYNTHETIC_ONLY",
+      "path": "READY",
+      "prepared_orders": 5,
+      "quantity": 125,
+      "reserved": 105,
+      "right": "C",
+      "safety_violations": 0,
+      "seed": 49,
+      "workload": "WARM"
+    }
+  ],
+  "exit_summary": {
+    "independent_validation_ms": {
+      "median": 2.16886,
+      "p95": 2.699909,
+      "p99": 2.843435,
+      "samples": 50,
+      "worst": 2.843435
+    },
+    "receipt_to_adapter_ms": {
+      "median": 39.832396,
+      "p95": 58.35438,
+      "p99": 74.528913,
+      "samples": 50,
+      "worst": 74.528913
+    },
+    "receipt_to_trigger_ms": {
+      "median": 1.5771945,
+      "p95": 2.587321,
+      "p99": 3.792084,
+      "samples": 50,
+      "worst": 3.792084
+    },
+    "reservation_to_adapter_ms": {
+      "median": 30.6539225,
+      "p95": 43.369587,
+      "p99": 52.44121,
+      "samples": 50,
+      "worst": 52.44121
+    },
+    "reservation_to_final_validation_ms": {
+      "median": 18.962533,
+      "p95": 29.345627,
+      "p99": 30.465259,
+      "samples": 50,
+      "worst": 30.465259
+    },
+    "selected_to_reservation_ms": {
+      "median": 3.888101,
+      "p95": 5.48915,
+      "p99": 12.17336,
+      "samples": 50,
+      "worst": 12.17336
+    },
+    "trigger_to_adapter_ms": {
+      "median": 38.3148425,
+      "p95": 54.562296,
+      "p99": 71.941592,
+      "samples": 50,
+      "worst": 71.941592
+    },
+    "trigger_to_prepared_ms": {
+      "median": 8.3178225,
+      "p95": 14.517253,
+      "p99": 20.928832,
+      "samples": 50,
+      "worst": 20.928832
+    },
+    "trigger_to_selected_ms": {
+      "median": 3.2741495,
+      "p95": 5.747993,
+      "p99": 7.327022,
+      "samples": 50,
+      "worst": 7.327022
+    }
+  },
+  "historical_phase10_exit_p99_ms": 177.901919,
+  "origin": "OFFLINE_SYNTHETIC_ONLY",
+  "platform": "macOS-13.7.8-x86_64-i386-64bit",
+  "real_broker_observations": 0,
+  "runtime": "3.9.6",
+  "safety_violations": 0,
+  "workload": "BENCHMARK_PROCESS_WITH_CONCURRENT_OFFLINE_SUITE_NOT_CONTROLLED_LOAD"
+}
